@@ -83,17 +83,22 @@ export class AuthService {
   }
 
   /** ================= TOKEN HANDLING ================= */
-  private getToken(): string | null {
-    return localStorage.getItem('token');
+  getToken(): string | null {
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
   }
 
-  private getRefreshToken(): string | null {
-    return localStorage.getItem('refreshToken');
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
   }
 
   private setTokens(token: string, refreshToken?: string): void {
     localStorage.setItem('token', token);
     if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+  }
+
+  logout(): void {
+    this.clearAuthData();
+    this.router.navigate(['/login']);
   }
 
   private clearAuthData(): void {
@@ -106,7 +111,7 @@ export class AuthService {
     localStorage.removeItem('firstName');
     localStorage.removeItem('lastName');
     localStorage.removeItem('roleName');
-    localStorage.removeItem('contactNo'); // Add this
+    localStorage.removeItem('contactNo');
     this.isAuthenticatedSubject.next(false);
     this.userSubject.next(null);
   }
@@ -129,35 +134,34 @@ export class AuthService {
   }
 
   private handleError(error: any): Observable<never> {
-  let errorMessage = 'An error occurred';
-  
-  if (error.error) {
-    if (typeof error.error === 'string') {
-      errorMessage = error.error;
-    } else if (error.error.message) {
-      errorMessage = error.error.message;
+    let errorMessage = 'An error occurred';
+    
+    if (error.error) {
+      if (typeof error.error === 'string') {
+        errorMessage = error.error;
+      } else if (error.error.message) {
+        errorMessage = error.error.message;
+      }
+    } else if (error.message) {
+      errorMessage = error.message;
     }
-  } else if (error.message) {
-    errorMessage = error.message;
-  }
 
-  console.log('Error details:', {
-    status: error.status,
-    url: error.url,
-    message: errorMessage
-  });
+    console.log('Error details:', {
+      status: error.status,
+      url: error.url,
+      message: errorMessage
+    });
 
-  // Don't logout for password change errors (401)
-  const isPasswordChangeError = error.url?.includes('change-password');
-  
-  if (error.status === 401 && !isPasswordChangeError) {
-    console.log('Session expired, logging out...');
-    this.clearAuthData();
-    this.router.navigate(['/login']);
+    // Don't logout for password change errors (401)
+    const isPasswordChangeError = error.url?.includes('change-password');
+    
+    if (error.status === 401 && !isPasswordChangeError) {
+      console.log('Session expired, logging out...');
+      this.logout();
+    }
+    
+    return throwError(() => new Error(errorMessage));
   }
-  
-  return throwError(() => new Error(errorMessage));
-}
 
   /** ================= AUTHENTICATION ================= */
   login(loginData: LoginRequest, remember: boolean = false): Observable<LoginResponse> {
@@ -197,7 +201,7 @@ export class AuthService {
         }
       }),
       catchError(error => {
-        this.clearAuthData();
+        this.logout();
         return this.handleError(error);
       })
     );
@@ -291,49 +295,59 @@ export class AuthService {
     );
   }
 
-changePassword(currentPassword: string, newPassword: string): Observable<any> {
-  console.log('🔑 Sending password change request:', {
-    hasCurrentPassword: !!currentPassword,
-    hasNewPassword: !!newPassword
-  });
-  
-  const payload = { 
-    currentPassword, 
-    newPassword 
-  };
-  
-  console.log('Payload:', payload);
+  changePassword(currentPassword: string, newPassword: string): Observable<any> {
+    console.log('🔑 Sending password change request:', {
+      hasCurrentPassword: !!currentPassword,
+      hasNewPassword: !!newPassword
+    });
+    
+    const payload = { 
+      currentPassword, 
+      newPassword 
+    };
+    
+    console.log('Payload:', payload);
 
-  return this.http.post(`${environment.apiUrl}auth/change-password`, payload, { 
-    headers: this.getHeaders() 
-  }).pipe(
-    map((response: any) => {
-      console.log('✅ Password change response:', response);
-      return response;
-    }),
-    catchError(error => {
-      console.error('❌ Password change error:', error);
-      
-      // Handle password change errors specifically
-      if (error.status === 401) {
-        // Password is incorrect - don't logout, just show error
-        const errorMsg = error.error?.message || 'Current password is incorrect';
-        return throwError(() => new Error(errorMsg));
-      }
-      
-      if (error.status === 400) {
-        const errorMsg = error.error?.message || 'Invalid password data';
-        return throwError(() => new Error(errorMsg));
-      }
-      
-      return this.handleError(error);
-    })
-  );
-}
+    return this.http.post(`${environment.apiUrl}auth/change-password`, payload, { 
+      headers: this.getHeaders() 
+    }).pipe(
+      map((response: any) => {
+        console.log('✅ Password change response:', response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('❌ Password change error:', error);
+        
+        // Handle password change errors specifically
+        if (error.status === 401) {
+          // Password is incorrect - don't logout, just show error
+          const errorMsg = error.error?.message || 'Current password is incorrect';
+          return throwError(() => new Error(errorMsg));
+        }
+        
+        if (error.status === 400) {
+          const errorMsg = error.error?.message || 'Invalid password data';
+          return throwError(() => new Error(errorMsg));
+        }
+        
+        return this.handleError(error);
+      })
+    );
+  }
 
   /** ================= UTILITIES ================= */
   isLoggedIn(): boolean {
-    return this.isAuthenticatedSubject.value;
+    const token = this.getToken();
+    if (!token) return false;
+    
+    // Check if token is expired
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const isExpired = payload.exp < Date.now() / 1000;
+      return !isExpired;
+    } catch {
+      return false;
+    }
   }
 
   getCurrentUser(): User | null {
