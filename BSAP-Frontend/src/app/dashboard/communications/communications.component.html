@@ -1,0 +1,415 @@
+<div class="data-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <div class="icon">💬</div>
+      <h1>List Of Communications</h1>
+    </div>
+    <button class="add-btn" (click)="showAddCommunicationModal()">Add Communication</button>
+  </div>
+
+  <!-- Table Controls -->
+  <div class="table-controls">
+    <div class="show-entries">
+      <label for="entries">Show</label>
+      <select id="entries" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select> 
+      <span>entries</span>
+    </div>
+    
+    <div class="search-box">
+      <label for="search">Search:</label>
+      <input 
+        type="text" 
+        id="search"
+        [(ngModel)]="searchTerm" 
+        (input)="onSearch()" 
+        placeholder="Search communications..."
+      />
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th (click)="sortTable('id')" class="sortable">
+            Serial No.
+            <span class="sort-icon" [class.active]="sortColumn === 'id'">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th (click)="sortTable('createdDate')" class="sortable">
+            Sending Date
+            <span class="sort-icon" [class.active]="sortColumn === 'createdDate'">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th (click)="sortTable('subject')" class="sortable">
+            Subject
+            <span class="sort-icon" [class.active]="sortColumn === 'subject'">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th (click)="sortTable('battalionName')" class="sortable">
+            Battalion
+            <span class="sort-icon" [class.active]="sortColumn === 'battalionName'">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th>Message</th>
+          <th>Document</th>
+          <th (click)="sortTable('active')" class="sortable">
+            Active
+            <span class="sort-icon" [class.active]="sortColumn === 'active'">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let communication of paginatedCommunications; trackBy: trackByCommunicationId">
+          <td>{{ communication.id }}</td>
+          <td>{{ communication.createdDate | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <strong>{{ communication.subject }}</strong>
+          </td>
+          <td>
+            <span *ngIf="communication.selectedBattalions && communication.selectedBattalions.length > 1" 
+                  class="multiple-battalions" 
+                  [title]="getMultipleBattalionNames(communication.selectedBattalions)">
+              Multiple ({{ communication.selectedBattalions.length }})
+            </span>
+            <span *ngIf="!communication.selectedBattalions || communication.selectedBattalions.length <= 1">
+              {{ communication.battalionName || getBattalionName(communication.battalionId) }}
+            </span>
+          </td>
+          <td class="message-cell" [title]="communication.message">
+            {{ communication.message }}
+          </td>
+ <td>
+  <ng-container *ngFor="let msg of communication.messages">
+     <!-- If NO attachments -->
+    <div *ngIf="msg.attachments.length === 0">
+      No Document
+    </div>
+    <ng-container *ngFor="let att of msg.attachments">
+
+      <a [href]="getAttachmentUrl(att.filename)" 
+         target="_blank" 
+         download>
+        {{ att.filename }}
+      </a>
+
+      <br />
+    </ng-container>
+  </ng-container>
+</td>
+
+          <td>
+            <span class="status-badge" [class.active]="communication.active" [class.inactive]="!communication.active">
+              {{ communication.active ? 'YES' : 'NO' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="view-btn" (click)="viewCommunicationDetails(communication)">View</button>
+              <button class="edit-btn" (click)="editCommunication(communication)">Edit</button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="paginatedCommunications.length === 0">
+          <td colspan="8" class="no-data">No communications found</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to 
+      {{ Math.min(currentPage * itemsPerPage, totalItems) }} of {{ totalItems }} entries
+    </div>
+    
+    <div class="pagination">
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === 1" 
+        (click)="goToPage(currentPage - 1)"
+      >
+        Previous
+      </button>
+      
+      <button 
+        *ngFor="let page of getVisiblePages()" 
+        class="page-btn" 
+        [class.active]="page === currentPage"
+        (click)="goToPage(page)"
+      >
+        {{ page }}
+      </button>
+      
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === totalPages" 
+        (click)="goToPage(currentPage + 1)"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Communication Modal -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">{{ isEditMode ? 'Edit Communication' : 'Add Communication' }}</h4>
+        <button type="button" class="close-btn" (click)="closeModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <form (ngSubmit)="isEditMode ? updateCommunication() : addCommunication()" #communicationForm="ngForm">
+          
+          <!-- Battalion Selection Section - Dropdown with Checkboxes -->
+          <div class="form-group">
+            <label class="required">Select Battalions</label>
+            
+            <!-- Dropdown Trigger -->
+            <div class="dropdown-trigger" (click)="toggleBattalionDropdown()">
+              <div class="dropdown-display">
+                <span class="selected-text">
+                  {{ getSelectedBattalionNames() }}
+                </span>
+                <span class="dropdown-arrow">{{ isBattalionDropdownOpen ? '▲' : '▼' }}</span>
+              </div>
+            </div>
+
+            <!-- Dropdown Content -->
+            <div class="dropdown-content" *ngIf="isBattalionDropdownOpen">
+              <!-- Select All Option -->
+              <div class="dropdown-item select-all-item">
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    [checked]="allBattalionsSelected"
+                    (change)="toggleSelectAll()"
+                    class="mr-2"
+                  />
+                  <strong>Select All Battalions</strong>
+                </label>
+              </div>
+
+              <div class="dropdown-divider"></div>
+
+              <!-- Battalion Options -->
+              <div 
+                *ngFor="let battalion of battalions; trackBy: trackByBattalionId"
+                class="dropdown-item"
+              >
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    [checked]="battalion.selected"
+                    (change)="toggleBattalionSelection(battalion.id)"
+                    class="mr-2"
+                  />
+                  {{ battalion.name }}
+                </label>
+              </div>
+            </div>
+            
+            <div class="error-message" *ngIf="selectedBattalionIds.length === 0 && communicationForm.submitted">
+              Please select at least one battalion
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="subject" class="required">Subject</label>
+            <input 
+              type="text" 
+              id="subject" 
+              name="subject" 
+              [(ngModel)]="currentCommunication.subject" 
+              #subject="ngModel"
+              required 
+              class="form-control"
+              placeholder="Enter subject"
+            />
+            <div class="error-message" *ngIf="subject.touched && subject.errors?.['required']">
+              Subject is required
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="message" class="required">Message</label>
+            <textarea 
+              id="message" 
+              name="message" 
+              [(ngModel)]="currentCommunication.message" 
+              #message="ngModel"
+              required 
+              rows="4"
+              class="form-control"
+              placeholder="Enter your message"
+            ></textarea>
+            <div class="error-message" *ngIf="message.touched && message.errors?.['required']">
+              Message is required
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="attachments">Attachments</label>
+            <input 
+              type="file" 
+              id="attachments" 
+              name="document" 
+              class="form-control"
+            (change)="onDocumentSelected($event)"
+          
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+            />
+            <small class="form-text text-muted">
+              You can select multiple files. Allowed formats: PDF, DOC, DOCX, JPG, JPEG, PNG, TXT
+            </small>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="cancel-btn" (click)="closeModal()">
+              Close
+            </button>
+            <button 
+              type="submit" 
+              class="save-btn" 
+              [disabled]="communicationForm.invalid || isLoading || selectedBattalionIds.length === 0"
+            >
+              <span *ngIf="isLoading" class="spinner"></span>
+              {{ isEditMode ? 'Update' : 'Save' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Communication Detail View Modal -->
+<div class="modal-overlay" *ngIf="showDetailView" (click)="closeDetailView()">
+  <div class="modal-dialog detail-modal" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="detail-header">
+          <button class="status-btn">Show Status</button>
+          <button class="back-btn" (click)="closeDetailView()">Back</button>
+        </div>
+      </div>
+      
+      <div class="modal-body" *ngIf="selectedCommunication">
+        <!-- Communication Details -->
+        <div class="communication-details">
+          <div class="detail-row">
+            <strong>Subject:</strong> {{ selectedCommunication.subject }}
+          </div>
+          <div class="detail-row">
+            <strong>Message:</strong> {{ selectedCommunication.message }}
+          </div>
+          <div class="detail-row">
+            <strong>Battalions:</strong> 
+            <span *ngIf="selectedCommunication.selectedBattalions && selectedCommunication.selectedBattalions.length > 1">
+              {{ getMultipleBattalionNames(selectedCommunication.selectedBattalions) }}
+            </span>
+            <span *ngIf="!selectedCommunication.selectedBattalions || selectedCommunication.selectedBattalions.length <= 1">
+              {{ selectedCommunication.battalionName || getBattalionName(selectedCommunication.battalionId) }}
+            </span>
+          </div>
+          <div class="detail-row">
+            <strong>Created Date:</strong> {{ selectedCommunication.createdDate | date:'dd/MM/yyyy' }}
+          </div>
+        </div>
+
+        <!-- Replies Section -->
+        <div class="replies-section" *ngIf="selectedCommunication.replies && selectedCommunication.replies.length > 0">
+          <h5>Replies</h5>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Sr. No.</th>
+                  <th>Reply Date</th>
+                  <th>Reply By</th>
+                  <th>Reply Messages</th>
+                  <th>Document</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let reply of selectedCommunication.replies; trackBy: trackByReplyId; let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td>{{ reply.replyDate | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ reply.replyBy }}</td>
+                  <td>{{ reply.replyMessage }}</td>
+                  <td>
+                    <span *ngIf="reply.document" class="document-icon">📎</span>
+                    <span *ngIf="!reply.document">-</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination-info">
+            Showing 1 to {{ selectedCommunication.replies.length }} of {{ selectedCommunication.replies.length }} entries
+          </div>
+        </div>
+
+        <!-- Send Reply Section -->
+        <div class="send-reply-section">
+          <h5>Send Reply</h5>
+          
+          <div class="form-group">
+            <label for="replyMessage">Message:</label>
+            <textarea 
+              id="replyMessage"
+              [(ngModel)]="replyMessage"
+              rows="4"
+              class="form-control"
+              placeholder="Enter your reply message"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="replyAttachments">Attachments:</label>
+            <input 
+              type="file" 
+              id="replyAttachments"
+              (change)="onFileChange($event)"
+              class="form-control"
+              multiple
+            />
+          </div>
+
+          <div class="reply-actions">
+            <button 
+              class="send-btn" 
+              (click)="sendReply()" 
+              [disabled]="!replyMessage.trim() || isLoading"
+            >
+              <span *ngIf="isLoading" class="spinner"></span>
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

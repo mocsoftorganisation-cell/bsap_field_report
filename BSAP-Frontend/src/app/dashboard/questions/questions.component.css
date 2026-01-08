@@ -1,0 +1,914 @@
+/* Questions component uses global-table.css styles */
+
+/*
+  STEP-BY-STEP SOLUTION FOR FORMULA BREAKING:
+  
+  STEP 1: Add this method to your questions.component.ts file:
+  
+  formatFormula(formula: string): string {
+    if (!formula) return '';
+    const maxLength = 25; // Characters per line
+    let result = '';
+    for (let i = 0; i < formula.length; i += maxLength) {
+      if (i > 0) result += '\n';
+      result += formula.substring(i, i + maxLength);
+    }
+    return result;
+  }
+  
+  STEP 2: In your questions.component.html, change the formula cell from:
+  <td>{{ question.formula }}</td>
+  
+  TO:
+  <td class="formula-cell">
+    <pre>{{ formatFormula(question.formula) }}</pre>
+  </td>
+  
+  This will break formulas every 25 characters with proper line breaks.
+*/
+
+/* Fixed Table Layout for Consistent Row Widths */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-table,
+.questions-table {
+  width: 100%;
+  table-layout: fixed; /* This ensures fixed column widths */
+  min-width: 1200px; /* Reduced to reasonable size */
+  border-collapse: collapse;
+}
+
+/* Simplified Fixed Column Widths - Practical approach */
+.questions-table th:nth-child(1),
+.questions-table td:nth-child(1) { width: 4%; }   /* ID */
+.questions-table th:nth-child(2),
+.questions-table td:nth-child(2) { width: 13%; }  /* Topic Name */
+.questions-table th:nth-child(3),
+.questions-table td:nth-child(3) { width: 17%; }  /* SubTopic Name */
+.questions-table th:nth-child(4),
+.questions-table td:nth-child(4) { width: 19%; }  /* Question Name */
+.questions-table th:nth-child(5),
+.questions-table td:nth-child(5) { width: 8%; }   /* Default Value */
+.questions-table th:nth-child(6),
+.questions-table td:nth-child(6) { width: 17%; }  /* Formula */
+.questions-table th:nth-child(7),
+.questions-table td:nth-child(7) { width: 5%; }   /* Priority */
+.questions-table th:nth-child(8),
+.questions-table td:nth-child(8) { width: 4%; }   /* Active */
+.questions-table th:nth-child(9),
+.questions-table td:nth-child(9) { width: 12%; }   /* Edit */
+
+/* Ensure text doesn't overflow in fixed width cells */
+.questions-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 8px 5px;
+  vertical-align: middle;
+  border-right: 1px solid #dee2e6;
+  font-size: 12px;
+  line-height: 1.3;
+  max-width: 0; /* This helps with text-overflow in fixed layout */
+}
+
+.questions-table th {
+  padding: 12px 6px;
+  text-align: left;
+  font-weight: 600;
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  color: white;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 13px;
+}
+
+/* Remove right border from last column */
+.questions-table th:last-child,
+.questions-table td:last-child {
+  border-right: none;
+}
+
+/* Special handling for text columns that need wrapping */
+.questions-table td:nth-child(3),
+.questions-table td:nth-child(4) {
+  white-space: normal; /* Allow wrapping for SubTopic and Question Name */
+  max-height: 50px;
+  overflow: hidden;
+  line-height: 1.2;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Formula column - simple effective solution */
+.questions-table td:nth-child(6) {
+  padding: 6px 4px;
+  vertical-align: top;
+}
+
+.questions-table td:nth-child(6) pre {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.3;
+  margin: 0;
+  padding: 2px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 65px;
+  overflow: hidden;
+  background: transparent;
+  border: none;
+}
+
+/* Alternative: If you want CSS-only solution without Angular changes */
+.questions-table td:nth-child(6).css-only {
+  white-space: pre-line;
+  max-height: 60px;
+  overflow: hidden;
+  line-height: 1.2;
+  word-break: break-all;
+  font-size: 10px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Add fade effect for overflowing formulas */
+.questions-table td:nth-child(6)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 15px;
+  background: linear-gradient(transparent, white);
+  pointer-events: none;
+}
+
+/* CSS to break formula at specific character intervals */
+.formula-text {
+  display: block;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  line-height: 1.1;
+  font-family: var(--bs-body-font-family);
+    font-size: var(--bs-body-font-size);
+    font-weight: var(--bs-body-font-weight);
+    line-height: var(--bs-body-line-height);
+    color: var(--bs-body-color);
+    text-align: var(--bs-body-text-align);
+    -webkit-text-size-adjust: 100%;
+}
+
+/* Character-based breaking utility classes */
+.formula-break-30 {
+  /* For formulas - break every ~30 characters */
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  hyphens: none;
+}
+
+.formula-break-25 {
+  /* For narrower displays - break every ~25 characters */
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  hyphens: none;
+}
+
+.formula-break-20 {
+  /* For mobile displays - break every ~20 characters */
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  hyphens: none;
+}
+
+/* Enhanced character breaking for formulas */
+.questions-table td:nth-child(6) .formula-content {
+  display: block;
+  word-spacing: -0.1em; /* Tighter spacing for formulas */
+  letter-spacing: 0;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* Force character-based breaking using CSS grid approach */
+.formula-char-break {
+  display: inline-block;
+  width: 100%;
+  word-break: break-all !important;
+  overflow-wrap: break-word !important;
+  hyphens: none !important;
+  white-space: normal !important;
+  /* Simulate character count breaking */
+  font-feature-settings: "kern" 0;
+  text-rendering: optimizeSpeed;
+}
+
+/* Alternative approach - CSS that forces breaking every ~15-20 characters */
+.questions-table td:nth-child(6):after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Make formula text more compact to force more breaks */
+.questions-table td:nth-child(6) {
+  font-variant-ligatures: none;
+  text-align: left;
+  text-justify: none;
+}
+
+/* Additional styles for question-specific elements */
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-row .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.checkbox-row {
+  align-items: center;
+}
+
+.checkbox-row .form-group {
+  flex: none;
+  margin-right: 20px;
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.no-data {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+}
+
+.loading {
+  text-align: center;
+  color: #007bff;
+  font-style: italic;
+  padding: 20px;
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+/* Formula Builder Styles */
+.formula-container {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 15px;
+  background-color: #f8f9fa;
+}
+
+.formula-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.formula-builder {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+.formula-builder .form-group {
+  margin-bottom: 10px;
+}
+
+.formula-builder label {
+  font-weight: 600;
+  color: #856404;
+}
+
+.subtopic-selection {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.subtopic-selection select {
+  flex: 1;
+}
+
+/* Enhanced Button Styles */
+.btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: center;
+  vertical-align: middle;
+  transition: all 0.15s ease-in-out;
+  display: inline-block;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0069d9;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+.btn-outline-success {
+  background-color: transparent;
+  border: 1px solid #28a745;
+  color: #28a745;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-outline-success:hover {
+  background-color: #28a745;
+  color: white;
+}
+
+/* Priority Badge */
+/* .priority-badge {
+  background: #e9ecef;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+} */
+
+/* Status Badge */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.inactive {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* Conditional Form Elements */
+.required {
+  color: #dc3545;
+}
+
+/* Formula Preview */
+.formula-preview {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 15px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+/* Formula Help Text */
+.formula-help {
+  background: #d1ecf1;
+  border: 1px solid #bee5eb;
+  border-radius: 4px;
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #0c5460;
+}
+
+/* Checkbox Enhancements */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: normal;
+  margin: 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.checkmark {
+  color: #495057;
+}
+
+
+.delete-btn:hover {
+  background: #c82333;
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Consistent modal header design */
+.modal-header {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  padding: 20px 25px;
+  border-bottom: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: white;
+  padding: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.modal-body {
+  padding: 20px 25px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #333;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.required {
+  color: #dc3545;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: normal !important;
+  margin-bottom: 0 !important;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.checkmark {
+  font-weight: 500;
+}
+
+.modal-footer {
+  padding: 15px 25px 20px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cancel-btn {
+  padding: 10px 20px;
+  border: 1px solid #6c757d;
+  background: white;
+  color: #6c757d;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.cancel-btn:hover {
+  background: #6c757d;
+  color: white;
+}
+
+.save-btn {
+  padding: 10px 20px;
+  border: none;
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.save-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.save-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Simplified Responsive Design */
+@media (max-width: 1199px) {
+  .questions-table {
+    min-width: 1000px;
+  }
+}
+
+@media (max-width: 991px) {
+  .questions-table {
+    min-width: 700px;
+    font-size: 13px;
+  }
+  
+  .questions-table th,
+  .questions-table td {
+    padding: 6px 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .questions-table {
+    min-width: 700px;
+    font-size: 11px;
+  }
+  
+  .questions-table th,
+  .questions-table td {
+    padding: 4px 2px;
+    font-size: 11px;
+  }
+
+  /* Hide less important columns on mobile */
+  .questions-table th:nth-child(5),
+  .questions-table td:nth-child(5),
+  .questions-table th:nth-child(6),
+  .questions-table td:nth-child(6) {
+    display: none; /* Hide Default Value and Formula columns */
+  }
+
+  /* Adjust remaining column widths for mobile */
+  .questions-table th:nth-child(1),
+  .questions-table td:nth-child(1) { width: 6%; }   /* ID */
+  .questions-table th:nth-child(2),
+  .questions-table td:nth-child(2) { width: 18%; }  /* Topic Name */
+  .questions-table th:nth-child(3),
+  .questions-table td:nth-child(3) { width: 25%; }  /* SubTopic Name */
+  .questions-table th:nth-child(4),
+  .questions-table td:nth-child(4) { width: 30%; }  /* Question Name */
+  .questions-table th:nth-child(7),
+  .questions-table td:nth-child(7) { width: 8%; }   /* Priority */
+  .questions-table th:nth-child(8),
+  .questions-table td:nth-child(8) { width: 6%; }   /* Active */
+  .questions-table th:nth-child(9),
+  .questions-table td:nth-child(9) { width: 7%; }   /* Edit */
+
+  /* Stack action buttons vertically on mobile */
+  .action-buttons {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .btn {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  /* Formula builder responsive adjustments */
+  .formula-buttons {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .subtopic-selection {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Modal responsive adjustments */
+  .modal-content {
+    width: 95%;
+    max-width: 95vw;
+    margin: 10px;
+  }
+
+  .modal-header {
+    padding: 15px 20px;
+  }
+
+  .modal-header h2 {
+    font-size: 18px;
+  }
+
+  .modal-body {
+    padding: 15px 20px;
+  }
+
+  .modal-footer {
+    padding: 15px 20px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-footer .save-btn,
+  .modal-footer .cancel-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .questions-table {
+    min-width: 500px;
+    font-size: 10px;
+  }
+  
+  .questions-table th,
+  .questions-table td {
+    padding: 3px 1px;
+    font-size: 10px;
+  }
+
+  .modal-header {
+    padding: 12px 15px;
+  }
+
+  .modal-header h2 {
+    font-size: 16px;
+  }
+
+  .modal-body,
+  .modal-footer {
+    padding: 12px 15px;
+  }
+}
+
+/* Additional styling to prevent content mixing */
+.questions-table tbody tr {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.questions-table tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Better visual separation for action buttons */
+.questions-table .action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.questions-table .btn {
+  font-size: 10px;
+  padding: 3px 4px;
+  margin: 0;
+  width: 100%;
+  text-align: center;
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Specific styling for Edit and Deactivate buttons */
+.questions-table .btn.edit-btn {
+  background: #17a2b8;
+  color: white;
+  font-size: 9px;
+}
+
+.questions-table .btn.deactivate-btn {
+  background: #dc3545;
+  color: white;
+  font-size: 9px;
+}
+
+.questions-table .btn.activate {
+  background: #28a745;
+  color: white;
+  font-size: 9px;
+}
+
+.questions-table .btn:hover {
+  transform: scale(1.02);
+  z-index: 5;
+}
+
+/* Priority badge styling */
+.questions-table .priority-badge {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 500;
+  background: #007bff;
+  color: white;
+  text-align: center;
+  min-width: 20px;
+}
+
+/* Status badge styling */
+.questions-table .status-badge {
+  font-size: 10px;
+  padding: 1px 4px;
+}
+
+/* Priority column - centered content */
+.questions-table td:nth-child(7) {
+  text-align: center;
+  padding: 8px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.questions-table td:nth-child(7) .priority-badge {
+  display: inline-block;
+  padding: 3px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #007bff;
+  color: white;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Active column - centered content */
+.questions-table td:nth-child(8) {
+  text-align: center;
+  padding: 8px 4px;
+  white-space: nowrap;
+}
+
+.questions-table td:nth-child(8) .status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  min-width: 35px;
+  text-align: center;
+}
+
+.questions-table td:nth-child(8) .status-badge.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.questions-table td:nth-child(8) .status-badge.inactive {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* Special handling for Edit column to prevent button cutoff */
+.questions-table td:nth-child(9) {
+  padding: 3px 1px;
+  overflow: visible; /* Allow buttons to extend slightly if needed */
+  white-space: nowrap;
+}
+
+.questions-table td:nth-child(9) .action-buttons {
+  min-width: 100%;
+  width: 100%;
+}
+
+/* Add tooltips for truncated formulas */
+.questions-table td:nth-child(6)[title] {
+  cursor: help;
+}

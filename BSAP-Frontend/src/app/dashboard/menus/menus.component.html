@@ -1,0 +1,244 @@
+<!-- Removed stray commented opening div -->
+<div class="data-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <div class="icon">📋</div>
+      <h1>List Of Menus</h1>
+    </div>
+    <button class="add-btn" (click)="showAddMenuModal()">Add Menu</button>
+  </div>
+
+  <!-- Table Controls -->
+  <div class="table-controls">
+    <div class="show-entries">
+      <label for="entries">Show</label>
+      <select id="entries" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      <span>entries</span>
+    </div>
+    
+    <div class="search-box">
+      <label for="search">Search:</label>
+      <input 
+        type="text" 
+        id="search"
+        [(ngModel)]="searchTerm" 
+        (input)="onSearch()" 
+        placeholder="Search menus..."
+      />
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <!-- <th (click)="sortTable('id')" class="sortable">
+            Id
+            <span class="sort-icon" [class.active]="sortColumn === 'id'">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th> -->
+          <th (click)="sortTable('menuName')" class="sortable">
+            Menu Name
+            <span class="sort-icon" [class.active]="sortColumn === 'menuName'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('menuUrl')" class="sortable">
+            Menu URL
+            <span class="sort-icon" [class.active]="sortColumn === 'menuUrl'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }}/ -->
+            </span>
+          </th>
+          <th (click)="sortTable('priority')" class="sortable">
+            Priority
+            <span class="sort-icon" [class.active]="sortColumn === 'priority'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('active')" class="sortable">
+            Active
+            <span class="sort-icon" [class.active]="sortColumn === 'active'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th>Edit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let menu of paginatedMenus; trackBy: trackByMenuId">
+          <!-- <td>{{ menu.id }}</td> -->
+          <td>{{ menu.menuName }}</td>
+          <td>{{ menu.menuUrl }}</td>
+          <td>
+            <span class="priority-badge">{{ menu.priority }}</span>
+          </td>
+          <td>
+            <span class="status-badge" [class.active]="menu.active" [class.inactive]="!menu.active">
+              {{ menu.active ? 'YES' : 'NO' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="edit-btn" (click)="editMenu(menu)">Edit</button>
+              <button 
+                class="deactivate-btn" 
+                [class.activate]="!menu.active"
+                (click)="toggleMenuStatus(menu)"
+              >
+                {{ menu.active ? 'Deactivate' : 'Activate' }}
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="paginatedMenus.length === 0">
+          <td colspan="6" class="no-data">No menus found</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to 
+      {{ Math.min(currentPage * itemsPerPage, totalItems) }} of {{ totalItems }} entries
+    </div>
+    
+    <div class="pagination">
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === 1" 
+        (click)="goToPage(currentPage - 1)"
+      >
+        Previous
+      </button>
+      
+      <button 
+        *ngFor="let page of getVisiblePages()" 
+        class="page-btn" 
+        [class.active]="page === currentPage"
+        (click)="goToPage(page)"
+        [disabled]="page === -1"
+      >
+        {{ page === -1 ? '...' : page }}
+      </button>
+      
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === totalPages" 
+        (click)="goToPage(currentPage + 1)"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+
+
+<!-- Menu Modal -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">{{ isEditMode ? 'Edit Menu' : 'Add Menu' }}</h4>
+        <button type="button" class="close-btn" (click)="closeModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <form (ngSubmit)="isEditMode ? updateMenu() : addMenu()" #menuForm="ngForm">
+          <div class="form-group">
+            <label for="menuName" class="required">Menu Name</label>
+            <input 
+              type="text" 
+              id="menuName" 
+              name="menuName" 
+              [(ngModel)]="currentMenu.menuName" 
+              #menuName="ngModel"
+              required 
+              class="form-control"
+              [class.error]="menuName.touched && menuName.errors?.['required']"
+            />
+            <div class="error-message" *ngIf="menuName.touched && menuName.errors?.['required']">
+              Menu name is required
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="menuUrl" class="required">Menu URL</label>
+            <input 
+              type="text" 
+              id="menuUrl" 
+              name="menuUrl" 
+              [(ngModel)]="currentMenu.menuUrl" 
+              #menuUrl="ngModel"
+              required 
+              class="form-control"
+              [class.error]="menuUrl.touched && menuUrl.errors?.['required']"
+            />
+            <div class="error-message" *ngIf="menuUrl.touched && menuUrl.errors?.['required']">
+              Menu URL is required
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="menuPriority" class="required">Priority</label>
+            <input 
+              type="number" 
+              id="menuPriority" 
+              name="menuPriority" 
+              [(ngModel)]="currentMenu.priority" 
+              #menuPriority="ngModel"
+              required 
+              min="1"
+              class="form-control"
+              [class.error]="menuPriority.touched && (menuPriority.errors?.['required'] || menuPriority.errors?.['min'])"
+            />
+            <div class="error-message" *ngIf="menuPriority.touched && menuPriority.errors?.['required']">
+              Priority is required
+            </div>
+            <div class="error-message" *ngIf="menuPriority.touched && menuPriority.errors?.['min']">
+              Priority must be at least 1
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  name="menuActive" 
+                  [(ngModel)]="currentMenu.active"
+                />
+                <span class="checkmark">Active</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="cancel-btn" (click)="closeModal()">
+              Close
+            </button>
+            <button 
+              type="submit" 
+              class="save-btn" 
+              [disabled]="menuForm.invalid || isLoading"
+            >
+              <span *ngIf="isLoading" class="spinner"></span>
+              {{ isEditMode ? 'Update' : 'Save' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

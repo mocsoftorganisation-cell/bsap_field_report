@@ -1,0 +1,213 @@
+/* Component-specific styles for districts */
+.area-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 4px;
+  font-size: 0.875em;
+  font-weight: 500;
+  color: #1976d2;
+}
+
+.description-cell {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Table column width adjustments */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto; /* allow horizontal scroll on small screens */
+}
+
+.data-table {
+  table-layout: auto; /* let columns size based on content */
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Ensure columns don't bleed into each other
+   Current column order: 1 ID,2 Range,3 District,4 Name,5 Area,6 Head,7 Mobile,8 Contact,9 Email,10 Active,11 Actions */
+
+/* Email column (9) - prevent wrapping and truncate with ellipsis */
+.data-table th:nth-child(9),
+.data-table td:nth-child(9) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px; /* cap email width */
+  vertical-align: middle;
+}
+
+/* Active column (10) - center the status badge and prevent wrapping */
+.data-table th:nth-child(10),
+.data-table td:nth-child(10) {
+  white-space: nowrap;
+  text-align: center;
+  vertical-align: middle;
+  width: 80px;
+}
+
+/* Actions column (11) - keep enough space for buttons */
+.data-table th:nth-child(11),
+.data-table td:nth-child(11) {
+  min-width: 120px;
+}
+
+.image-preview {
+  position: relative;
+  display: inline-block;
+}
+
+.thumbnail {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 2px solid #e0e0e0;
+}
+
+.no-image {
+  color: #9e9e9e;
+  font-style: italic;
+  font-size: 0.875em;
+  padding: 0.875rem 1.75rem;
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.header-actions .btn-primary:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+}
+
+.permissions-container {
+  padding: 20px;
+}
+
+.permissions-container h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+/* Simple modal styling */
+.modal-overlay {
+  /* Make overlay cover the viewport and center modal with flexbox */
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.45);
+  padding: 16px;
+  z-index: 9999;
+}
+
+.modal-dialog {
+  margin: 0;
+  max-width: 640px; /* wider on desktop */
+  width: 100%;
+}
+
+.modal-content {
+  background: #fff;
+  /* padding: 20px; */
+  border-radius: 8px;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .modal-dialog {
+    max-width: 560px;
+  }
+}
+
+@media (max-width: 420px) {
+  .modal-dialog {
+    max-width: 100%;
+  }
+  .modal-content {
+    padding: 12px;
+    border-radius: 6px;
+  }
+}
+.page-title-subheading {
+  margin-top: 4px; /* small spacing below heading */
+  font-size: 14px;
+  color: #6c757d; /* softer subheading color */
+}
+.app-page-title {
+  padding: 20px 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+.page-title-icon i {
+  font-size: 50px;  /* larger icon */
+  color: #ff6600;
+}
+.page-title-heading h2 {
+  margin: 0; /* remove extra margin */
+}
+.page-title-icon {
+  font-size: 24px;
+  margin-right: 10px;
+}
+
+.table-panel {
+  overflow-x: auto;
+}
+.btn {
+  margin: 5px 5px;
+}
+
+/* Table header tweaks to improve alignment with cells */
+.data-table thead th {
+  padding: 14px 12px;
+  line-height: 1.2;
+  vertical-align: middle;
+  font-weight: 700;
+  text-align: left;
+  background-color: #0a62c8; /* blue header matching existing table visuals */
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.data-table thead th.sortable {
+  cursor: pointer;
+}
+
+.data-table thead th .sort-icon {
+  margin-left: 8px;
+  font-size: 0.95em;
+}
+
+/* Ensure header has a solid background so sticky header (if any) looks consistent */
+/* Note: header background intentionally set above; no override */
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: #b0e5b8; /* green-ish background for active */
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.status-badge.inactive {
+  background: #f5bdbd;
+}
+

@@ -1,0 +1,352 @@
+<div class="data-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <div class="icon">📋</div>
+      <h1>List Of Sub Menus</h1>
+    </div>
+    <button class="add-btn" (click)="showAddSubmenuModal()">Add Sub Menu</button>
+  </div>
+
+  <!-- Table Controls -->
+  <div class="table-controls">
+    <div class="show-entries">
+      <label for="entries">Show</label>
+      <select id="entries" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      <span>entries</span>
+    </div>
+     
+    <div class="search-box">
+      <label for="search">Search:</label>
+      <input 
+        type="text" 
+        id="search"
+        [(ngModel)]="searchTerm" 
+        (input)="onSearch()" 
+        placeholder="Search submenus..."
+      />
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <!-- <th (click)="sortTable('id')" class="sortable">
+            ID
+            <span class="sort-icon" [class.active]="sortColumn === 'id'">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th> -->
+          <th (click)="sortTable('parentMenu')" class="sortable">
+            Menu Name
+            <span class="sort-icon" [class.active]="sortColumn === 'parentMenu'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('subMenuName')" class="sortable">
+            SubMenu Name
+            <span class="sort-icon" [class.active]="sortColumn === 'menuName'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('menuUrl')" class="sortable">SubMenu Url
+            <span class="sort-icon" [class.active]="sortColumn === 'menuUrl'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('priority')" class="sortable">
+            Priority
+            <span class="sort-icon" [class.active]="sortColumn === 'priority'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+                    <th (click)="sortTable('active')" class="sortable">
+            Status
+            <span class="sort-icon" [class.active]="sortColumn === 'active'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th>Edit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let submenu of paginatedData">
+          <!-- <td>{{ submenu.id }}</td> -->
+          <td>{{ submenu.parentMenu || getMenuName(submenu.menuId) }}</td>
+          <td>{{ submenu.menuName || submenu.subMenuName }}</td>
+          <td class="url-cell">{{ submenu.menuUrl || submenu.subMenuUrl }}</td>
+          <td> <span class="priority-badge">{{ submenu.priority }}</span></td>
+          <td>
+            <span class="status-badge" [class.active]="submenu.active" [class.inactive]="!submenu.active">
+              {{ submenu.active ? 'YES' : 'NO' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="edit-btn" (click)="editSubmenu(submenu)">Edit</button>
+              <button 
+                class="deactivate-btn" 
+                [class.activate]="!submenu.active"
+                (click)="toggleSubmenuStatus(submenu)"
+              >
+                {{ submenu.active ? 'Deactivate' : 'Activate' }}
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="paginatedData.length === 0">
+          <td colspan="7" class="no-data">No submenus found</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to 
+      {{ Math.min(currentPage * itemsPerPage, totalItems) }} of {{ totalItems }} entries
+    </div>
+    
+    <div class="pagination">
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === 1" 
+        (click)="onPageChange(currentPage - 1)"
+      >
+        Previous
+      </button>
+      
+      <button 
+        *ngFor="let page of getVisiblePages()" 
+        class="page-btn" 
+        [class.active]="page === currentPage"
+        (click)="onPageChange(page)"
+      >
+        {{ page }}
+      </button>
+      
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === totalPages" 
+        (click)="onPageChange(currentPage + 1)"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Submenu Modal -->
+<div class="modal-overlay" *ngIf="showModal && !isEditMode" (click)="closeModal()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Add Sub Menu</h4>
+        <button type="button" class="close-btn" (click)="closeModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <form (ngSubmit)="addSubmenu()" #submenuForm="ngForm">
+          <div class="form-group">
+            <label for="menuId">Menu <span class="required">*</span></label>
+            <select 
+              id="menuId"
+              name="menuId"
+              class="form-control" 
+              [(ngModel)]="currentSubmenu.menuId"
+              required
+              #menuIdInput="ngModel">
+              <option [value]="null">Select Menu</option>
+              <option *ngFor="let menu of menus" [value]="menu.id">{{ menu.menuName }}</option>
+            </select>
+            <div class="error-message" *ngIf="menuIdInput.invalid && menuIdInput.touched">
+              Menu selection is required
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="submenuName">Sub Menu Name <span class="required">*</span></label>
+            <input type="text" 
+                   id="submenuName"
+                   name="submenuName"
+                   class="form-control" 
+                   [(ngModel)]="currentSubmenu.subMenuName"
+                   required
+                   #submenuNameInput="ngModel"
+                   placeholder="Enter sub menu name">
+            <div class="error-message" *ngIf="submenuNameInput.invalid && submenuNameInput.touched">
+              Sub menu name is required
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="submenuUrl">Sub Menu URL <span class="required">*</span></label>
+            <input type="text" 
+                   id="submenuUrl"
+                   name="submenuUrl"
+                   class="form-control" 
+                   [(ngModel)]="currentSubmenu.subMenuUrl"
+                   required
+                   #submenuUrlInput="ngModel"
+                   placeholder="Enter sub menu URL">
+            <div class="error-message" *ngIf="submenuUrlInput.invalid && submenuUrlInput.touched">
+              Sub menu URL is required
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="priority">Priority <span class="required">*</span></label>
+            <input type="number" 
+                   id="priority"
+                   name="priority"
+                   class="form-control" 
+                   [(ngModel)]="currentSubmenu.priority"
+                   required
+                   #priorityInput="ngModel"
+                   placeholder="Enter priority">
+            <div class="error-message" *ngIf="priorityInput.invalid && priorityInput.touched">
+              Priority is required
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" 
+                       name="submenuActive"
+                       [(ngModel)]="currentSubmenu.active">
+                <span class="checkmark">Active</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="cancel-btn" (click)="closeModal()">
+              Close
+            </button>
+            <button type="submit" 
+                    class="save-btn" 
+                    [disabled]="submenuForm.invalid || isLoading">
+              <span *ngIf="isLoading" class="spinner"></span>
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Submenu Modal -->
+<div class="modal-overlay" *ngIf="showModal && isEditMode" (click)="closeModal()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Edit Sub Menu</h4>
+        <button type="button" class="close-btn" (click)="closeModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <form (ngSubmit)="updateSubmenu()" #editSubmenuForm="ngForm">
+          <div class="form-group">
+            <label for="editMenuId">Menu <span class="required">*</span></label>
+            <select 
+              id="editMenuId"
+              name="editMenuId"
+              class="form-control" 
+              [(ngModel)]="currentSubmenu.menuId"
+              required
+              #editMenuIdInput="ngModel">
+              <option [value]="null">Select Menu</option>
+              <option *ngFor="let menu of menus" [value]="menu.id">{{ menu.menuName }}</option>
+            </select>
+            <div class="error-message" *ngIf="editMenuIdInput.invalid && editMenuIdInput.touched">
+              Menu selection is required
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="editSubmenuName">Sub Menu Name <span class="required">*</span></label>
+            <input type="text" 
+                   id="editSubmenuName"
+                   name="editSubmenuName"
+                   class="form-control" 
+                   [(ngModel)]="currentSubmenu.subMenuName"
+                   required
+                   #editSubmenuNameInput="ngModel"
+                   placeholder="Enter sub menu name">
+            <div class="error-message" *ngIf="editSubmenuNameInput.invalid && editSubmenuNameInput.touched">
+              Sub menu name is required
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="editSubmenuUrl">Sub Menu URL <span class="required">*</span></label>
+            <input type="text" 
+                   id="editSubmenuUrl"
+                   name="editSubmenuUrl"
+                   class="form-control" 
+                   [(ngModel)]="currentSubmenu.subMenuUrl"
+                   required
+                   #editSubmenuUrlInput="ngModel"
+                   placeholder="Enter sub menu URL">
+            <div class="error-message" *ngIf="editSubmenuUrlInput.invalid && editSubmenuUrlInput.touched">
+              Sub menu URL is required
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="editPriority">Priority <span class="required">*</span></label>
+            <input type="number" 
+                   id="editPriority"
+                   name="editPriority"
+                   class="form-control" 
+                   [(ngModel)]="currentSubmenu.priority"
+                   required
+                   #editPriorityInput="ngModel"
+                   placeholder="Enter priority">
+            <div class="error-message" *ngIf="editPriorityInput.invalid && editPriorityInput.touched">
+              Priority is required
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" 
+                       name="editSubmenuActive"
+                       [(ngModel)]="currentSubmenu.active">
+                <span class="checkmark">Active</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="cancel-btn" (click)="closeModal()">
+              Close
+            </button>
+            <button type="submit" 
+                    class="save-btn" 
+                    [disabled]="editSubmenuForm.invalid || isLoading">
+              <span *ngIf="isLoading" class="spinner"></span>
+              Update
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

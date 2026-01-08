@@ -1,0 +1,1069 @@
+const { Question, Topic, SubTopic, Module, User, PerformanceStatistic } = require('../models');
+const { Op } = require('sequelize');
+
+class QuestionService {
+  
+  // Get all questions with pagination and filtering
+  static async getAllQuestions(options = {}) {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = 'priority',
+      sortOrder = 'ASC',
+      search,
+      topicId,
+      subTopicId,
+      moduleId,
+      questionType,
+      isActive
+    } = options;
+
+    const offset = (page - 1) * limit;
+    const whereClause = {};
+
+    if (search) {
+      whereClause[Op.or] = [
+        { question: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    if (topicId) {
+      whereClause.topicId = topicId;
+    }
+
+    if (subTopicId) {
+      whereClause.subTopicId = subTopicId;
+    }
+
+    if (questionType) {
+      whereClause.questionType = questionType;
+    }
+
+    if (isActive !== undefined) {
+      whereClause.isActive = isActive;
+    }
+
+    const includeClause = [
+      {
+        model: Topic,
+        as: 'topic',
+        attributes: ['id', 'topicName', 'moduleId'],
+        include: [{
+          model: Module,
+          as: 'module',
+          attributes: ['id', 'moduleName'],
+          ...(moduleId && { where: { id: moduleId } })
+        }]
+      },
+      {
+        model: SubTopic,
+        as: 'subTopic',
+        attributes: ['id', 'subTopicName'],
+        required: false
+      }
+    ];
+
+    const { count, rows } = await Question.findAndCountAll({
+      where: whereClause,
+      include: includeClause,
+      limit,
+      offset,
+      order: [[sortBy, sortOrder]]
+    });
+
+    return {
+      questions: rows,
+      total: count
+    };
+  }
+
+  // Get question by ID
+  static async getQuestionById(id) {
+    return await Question.findByPk(id, {
+      include: [
+        {
+          model: Topic,
+          as: 'topic',
+          attributes: ['id', 'topicName', 'subName'],
+          include: [{
+            model: Module,
+            as: 'module',
+            attributes: ['id', 'moduleName']
+          }]
+        },
+        {
+          model: SubTopic,
+          as: 'subTopic',
+          attributes: ['id', 'subTopicName'],
+          required: false
+        }
+      ]
+    });
+  }
+
+  // Create new question
+  static async createQuestion(questionData) {
+    console.log('Creating question with data:', questionData);
+    return await Question.create(questionData);
+  }
+
+  // Update question
+  static async updateQuestion(id, questionData) {
+    const question = await Question.findByPk(id);
+    if (!question) return null;
+
+    await question.update(questionData);
+    return await this.getQuestionById(id);
+  }
+
+  // Delete question
+  static async deleteQuestion(id) {
+    const question = await Question.findByPk(id);
+    if (!question) return false;
+
+    // Check if question is used in performance statistics
+    const statsCount = await PerformanceStatistic.count({ where: { questionId: id } });
+    if (statsCount > 0) {
+      throw new Error('Cannot delete question that has performance statistics data');
+    }
+
+    await question.destroy();
+    return true;
+  }
+
+  // Bulk create questions
+  static async bulkCreateQuestions(questions) {
+    const created = await Question.bulkCreate(questions);
+    return created;
+  }
+
+  // Get questions by topic
+  static async getQuestionsByTopic(topicId, options = {}) {
+    const {
+      page,
+      limit,
+      sortBy = 'priority',
+      sortOrder = 'ASC',
+      isActive,
+      questionType,
+      excludeSubTopicQuestions = false
+    } = options;
+
+    const whereClause = { topicId };
+
+    if (isActive !== undefined) {
+      whereClause.isActive = isActive;
+    }
+
+    if (questionType) {
+      whereClause.questionType = questionType;
+    }
+
+    if (excludeSubTopicQuestions) {
+      whereClause.subTopicId = null;
+    }
+
+    // If pagination is requested, use findAndCountAll with limit/offset
+    if (page && limit) {
+      const offset = (page - 1) * limit;
+      const { count, rows } = await Question.findAndCountAll({
+        where: whereClause,
+        include: [{
+          model: SubTopic,
+          as: 'subTopic',
+          attributes: ['id', 'subTopicName'],
+          required: false
+        }],
+        limit,
+        offset,
+        order: [[sortBy, sortOrder]]
+      });
+
+      return {
+        questions: rows,
+        total: count
+      };
+    }
+
+    // If no pagination, return all questions
+    const questions = await Question.findAll({
+      where: whereClause,
+      include: [{
+        model: SubTopic,
+        as: 'subTopic',
+        attributes: ['id', 'subTopicName'],
+        required: false
+      }],
+      order: [[sortBy, sortOrder]]
+    });
+
+    return {
+      questions,
+      total: questions.length
+    };
+  }
+
+  // Get questions by subtopic
+  static async getQuestionsBySubTopic(subTopicId, options = {}) {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = 'priority',
+      sortOrder = 'ASC',
+      isActive,
+      questionType
+    } = options;
+
+    const offset = (page - 1) * limit;
+    const whereClause = { subTopicId };
+
+    if (isActive !== undefined) {
+      whereClause.isActive = isActive;
+    }
+
+    if (questionType) {
+      whereClause.questionType = questionType;
+    }
+
+    const { count, rows } = await Question.findAndCountAll({
+      where: whereClause,
+      limit,
+      offset,
+      order: [[sortBy, sortOrder]]
+    });
+
+    return {
+      questions: rows,
+      total: count
+    };
+  }
+
+  // Search questions
+  static async searchQuestions(options = {}) {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      topicId,
+      subTopicId,
+      moduleId,
+      questionType,
+      isActive
+    } = options;
+
+    const offset = (page - 1) * limit;
+    const whereClause = {
+      [Op.or]: [
+        { question: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } }
+      ]
+    };
+
+    if (topicId) {
+      whereClause.topicId = topicId;
+    }
+
+    if (subTopicId) {
+      whereClause.subTopicId = subTopicId;
+    }
+
+    if (questionType) {
+      whereClause.questionType = questionType;
+    }
+
+    if (isActive !== undefined) {
+      whereClause.isActive = isActive;
+    }
+
+    const includeClause = [
+      {
+        model: Topic,
+        as: 'topic',
+        attributes: ['id', 'topicName'],
+        include: [{
+          model: Module,
+          as: 'module',
+          attributes: ['id', 'moduleName'],
+          ...(moduleId && { where: { id: moduleId } })
+        }]
+      },
+      {
+        model: SubTopic,
+        as: 'subTopic',
+        attributes: ['id', 'subTopicName'],
+        required: false
+      }
+    ];
+
+    const { count, rows } = await Question.findAndCountAll({
+      where: whereClause,
+      include: includeClause,
+      limit,
+      offset,
+      order: [['question', 'ASC']]
+    });
+
+    return {
+      questions: rows,
+      total: count
+    };
+  }
+
+
+  // In QuestionService.js - getActiveQuestions method
+// static async getActiveQuestions(params = {}) {
+//   try {
+//     console.log("=== SERVICE: getActiveQuestions START ===");
+//     console.log("1. Params received:", params);
+    
+//     // Destructure with default empty object
+//     const { 
+//       topicId, 
+//       subTopicId, 
+//       moduleId, 
+//       questionType 
+//     } = params;
+    
+//     console.log("3. Destructured values:", { topicId, subTopicId, moduleId, questionType });
+    
+//     const whereClause = {active: true };
+//     console.log("4. Initial whereClause:", whereClause);
+    
+//     const includeClause = [];
+
+//     // Apply filters if provided
+//     if (topicId) {
+//       whereClause.topicId = topicId;
+//       console.log("5. Added topicId filter:", topicId);
+//     }
+
+//     if (subTopicId) {
+//       whereClause.subTopicId = subTopicId;
+//       console.log("6. Added subTopicId filter:", subTopicId);
+//     }
+
+//        if (questionType) {
+//       whereClause.type = questionType;  // Database column is 'type'
+//       console.log("7. Added type filter:", questionType);
+//     }
+
+
+//     console.log("8. Final whereClause:", whereClause);
+
+    
+//     // // Handle module-based filtering
+//     // if (moduleId && !topicId) {
+//     //   console.log("9. Adding module filter through topic association");
+//     //   includeClause.push({
+//     //     model: Topic,
+//     //     as: 'topic',
+//     //     where: { moduleId },
+//     //     attributes: ['id', 'topicName', 'moduleId']
+//     //   });
+//     // } else {
+//     //   console.log("10. Including topic info without module filter");
+//     //   includeClause.push({
+//     //     model: Topic,
+//     //     as: 'topic',
+//     //     attributes: ['id', 'topicName', 'moduleId']
+//     //   });
+//     // }
+
+//     // Always include subtopic info
+//     includeClause.push({
+//       model: SubTopic,
+//       as: 'subTopic',
+//       attributes: ['id', 'subTopicName'],
+//       required: false
+//     });
+
+//     console.log("11. Include clause structure:", JSON.stringify(includeClause, null, 2));
+    
+//     console.log("12. Executing database query...");
+//     const questions = await Question.findAll({
+//       where: whereClause,
+//       include: includeClause,
+//       order: [
+//         ['topicId', 'ASC'],
+//         ['subTopicId', 'ASC'],
+//         ['priority', 'ASC']
+//       ],
+//       attributes: [
+//         'id', 
+//         'question', 
+//         'type',  // Changed from 'questionType' to 'type'
+//         'topicId', 
+//         'subTopicId', 
+//         'priority',  // Changed from 'displayOrder' to 'priority'
+//         'active'  // Include active field
+//       ]
+//     });
+  
+
+//     console.log(`=== SERVICE: Found ${questions.length} active questions ===`);
+//     console.log("=== SERVICE: getActiveQuestions END ===");
+    
+
+//       if (questions.length > 0) {
+//       console.log("8. First question sample:", {
+//         id: questions[0].id,
+//         question: questions[0].question,
+//         type: questions[0].type,
+//         active: questions[0].active,
+//         topicId: questions[0].topicId
+//       });
+//     }
+    
+//     return questions;
+//   } catch (error) {
+//     console.error("=== SERVICE ERROR: ===", error);
+//     throw error;
+//   }
+// }
+
+
+
+  //   return await Question.findAll({
+  //     where: whereClause,
+  //     ...(includeClause.length && { include: includeClause }),
+  //     order: [['displayOrder', 'ASC']],
+  //     attributes: ['id', 'question', 'questionType', 'topicId', 'subTopicId', 'displayOrder', 'maxScore']
+  //   });
+  // }
+
+
+
+  static async getActiveQuestions(params = {}) {
+  try {
+    console.log("=== SERVICE: getActiveQuestions START ===");
+    console.log("1. Params received:", params);
+    
+    const { topicId, subTopicId, moduleId, questionType } = params;
+    
+    // console.log("2. Destructured values:", { topicId, subTopicId, moduleId, questionType });
+    
+    // Use 'active' not 'isActive' - matches your database column
+    const whereClause = { active: true };
+    
+    // console.log("3. Initial whereClause:", whereClause);
+    
+    // Apply filters if provided
+    if (topicId) {
+      whereClause.topicId = topicId;
+      // console.log("4. Added topicId filter:", topicId);
+    }
+
+    if (subTopicId) {
+      whereClause.subTopicId = subTopicId;
+      // console.log("5. Added subTopicId filter:", subTopicId);
+    }
+
+    // IMPORTANT: Use 'type' for database column, 'questionType' for parameter
+    if (questionType) {
+      whereClause.type = questionType;  // Database column is 'type'
+      // console.log("6. Added type filter:", questionType);
+    }
+
+    // console.log("7. Final whereClause:", whereClause);
+    
+    const includeClause = [
+      {
+        model: Topic,
+        as: 'topic',
+        attributes: ['id', 'topicName', 'moduleId']
+      },
+      {
+        model: SubTopic,
+        as: 'subTopic',
+        attributes: ['id', 'subTopicName'],
+        required: false
+      }
+    ];
+
+    // console.log("8. Executing query...");
+    
+    const questions = await Question.findAll({
+      where: whereClause,
+      include: includeClause,
+      order: [
+        ['topicId', 'ASC'],
+        ['subTopicId', 'ASC'],
+        ['priority', 'ASC']
+      ]
+    });
+
+    // console.log(`=== SERVICE: Found ${questions.length} active questions ===`);
+    
+    return questions;
+  } catch (error) {
+   
+    throw error;
+  }
+}
+  // Activate question
+  static async activateQuestion(id, updatedBy) {
+    const question = await Question.findByPk(id);
+    if (!question) return null;
+
+    await question.update({
+      isActive: true,
+      updatedBy
+    });
+
+    return question;
+  }
+
+  // Deactivate question
+  static async deactivateQuestion(id, updatedBy) {
+    const question = await Question.findByPk(id);
+    if (!question) return null;
+
+    await question.update({
+      isActive: false,
+      updatedBy
+    });
+
+    return question;
+  }
+
+  // Get question statistics
+  static async getQuestionStatistics(topicId = null, subTopicId = null, moduleId = null) {
+    const whereClause = {};
+    const includeClause = [];
+
+    if (topicId) {
+      whereClause.topicId = topicId;
+    }
+
+    if (subTopicId) {
+      whereClause.subTopicId = subTopicId;
+    }
+
+    if (moduleId && !topicId) {
+      includeClause.push({
+        model: Topic,
+        as: 'topic',
+        where: { moduleId },
+        attributes: []
+      });
+    }
+
+    const [
+      totalQuestions,
+      activeQuestions,
+      questionsWithStats
+    ] = await Promise.all([
+      Question.count({ 
+        where: whereClause,
+        ...(includeClause.length && { include: includeClause })
+      }),
+      Question.count({ 
+        where: { ...whereClause, isActive: true },
+        ...(includeClause.length && { include: includeClause })
+      }),
+      Question.count({
+        where: whereClause,
+        include: [
+          ...includeClause,
+          {
+            model: PerformanceStatistic,
+            as: 'performanceStatistics',
+            required: true
+          }
+        ]
+      })
+    ]);
+
+    // Get question type distribution
+    const questionTypeStats = await Question.findAll({
+      where: whereClause,
+      attributes: [
+        'questionType',
+        [Question.sequelize.fn('COUNT', Question.sequelize.col('Question.id')), 'count']
+      ],
+      ...(includeClause.length && { include: includeClause }),
+      group: ['questionType'],
+      order: [[Question.sequelize.literal('count'), 'DESC']]
+    });
+
+    // Get usage statistics
+    const usageStats = await Question.findAll({
+      where: whereClause,
+      attributes: [
+        'id',
+        'question',
+        [Question.sequelize.fn('COUNT', Question.sequelize.col('performanceStatistics.id')), 'usageCount']
+      ],
+      include: [
+        ...(includeClause.length ? includeClause : []),
+        {
+          model: PerformanceStatistic,
+          as: 'performanceStatistics',
+          attributes: [],
+          required: false
+        }
+      ],
+      group: ['Question.id'],
+      order: [[Question.sequelize.literal('usageCount'), 'DESC']],
+      limit: 10
+    });
+
+    return {
+      totalQuestions,
+      activeQuestions,
+      inactiveQuestions: totalQuestions - activeQuestions,
+      questionsWithStats,
+      questionsWithoutStats: totalQuestions - questionsWithStats,
+      questionTypeStats: questionTypeStats.map(stat => ({
+        type: stat.questionType,
+        count: parseInt(stat.dataValues.count) || 0
+      })),
+      topUsedQuestions: usageStats.map(question => ({
+        id: question.id,
+        question: question.question,
+        usageCount: parseInt(question.dataValues.usageCount) || 0
+      }))
+    };
+  }
+
+  // Check if question exists in topic/subtopic
+  static async isQuestionExists(question, topicId, subTopicId = null, excludeId = null) {
+    const whereClause = { question, topicId };
+    
+    if (subTopicId) {
+      whereClause.subTopicId = subTopicId;
+    } else {
+      whereClause.subTopicId = null;
+    }
+
+    if (excludeId) {
+      whereClause.id = { [Op.ne]: excludeId };
+    }
+
+    const count = await Question.count({ where: whereClause });
+    return count > 0;
+  }
+
+  // Reorder questions within topic/subtopic
+  static async reorderQuestions(questionOrders, updatedBy) {
+    const promises = questionOrders.map(({ id, displayOrder }) => 
+      Question.update(
+        { displayOrder, updatedBy },
+        { where: { id } }
+      )
+    );
+
+    await Promise.all(promises);
+    
+    return await Question.findAll({
+      where: { id: { [Op.in]: questionOrders.map(q => q.id) } },
+      order: [['displayOrder', 'ASC']],
+      attributes: ['id', 'question', 'displayOrder', 'topicId', 'subTopicId']
+    });
+  }
+
+  // Get questions for dropdown
+  static async getQuestionsForDropdown(topicId = null, subTopicId = null, moduleId = null) {
+    const whereClause = { isActive: true };
+    const includeClause = [];
+
+    if (topicId) {
+      whereClause.topicId = topicId;
+    }
+
+    if (subTopicId) {
+      whereClause.subTopicId = subTopicId;
+    }
+
+    if (moduleId && !topicId) {
+      includeClause.push({
+        model: Topic,
+        as: 'topic',
+        where: { moduleId },
+        attributes: []
+      });
+    }
+
+    return await Question.findAll({
+      where: whereClause,
+      ...(includeClause.length && { include: includeClause }),
+      attributes: ['id', 'question', 'questionType', 'maxScore', 'displayOrder', 'topicId', 'subTopicId'],
+      order: [['displayOrder', 'ASC']]
+    });
+  }
+
+  // Get question hierarchy (with module, topic, subtopic)
+  static async getQuestionHierarchy(questionId) {
+    return await Question.findByPk(questionId, {
+      include: [
+        {
+          model: Topic,
+          as: 'topic',
+          attributes: ['id', 'topicName', 'subName'],
+          include: [{
+            model: Module,
+            as: 'module',
+            attributes: ['id', 'moduleName']
+          }]
+        },
+        {
+          model: SubTopic,
+          as: 'subTopic',
+          attributes: ['id', 'subTopicName'],
+          required: false
+        }
+      ]
+    });
+  }
+
+  // Bulk update questions
+  static async bulkUpdateQuestions(updates, updatedBy) {
+    const promises = updates.map(({ id, ...data }) => 
+      Question.update(
+        { ...data, updatedBy },
+        { where: { id } }
+      )
+    );
+
+    await Promise.all(promises);
+    
+    const updatedIds = updates.map(u => u.id);
+    return await Question.findAll({
+      where: { id: { [Op.in]: updatedIds } },
+      include: [
+        {
+          model: Topic,
+          as: 'topic',
+          attributes: ['id', 'topicName']
+        },
+        {
+          model: SubTopic,
+          as: 'subTopic',
+          attributes: ['id', 'subTopicName'],
+          required: false
+        }
+      ],
+      order: [['displayOrder', 'ASC']]
+    });
+  }
+
+  // Get next display order within topic/subtopic
+  static async getNextDisplayOrder(topicId, subTopicId = null) {
+    const whereClause = { topicId };
+    if (subTopicId) {
+      whereClause.subTopicId = subTopicId;
+    } else {
+      whereClause.subTopicId = null;
+    }
+
+    const maxOrder = await Question.max('displayOrder', { where: whereClause });
+    return (maxOrder || 0) + 1;
+  }
+
+  // Move question to another topic/subtopic
+  static async moveQuestion(questionId, newTopicId, newSubTopicId = null, updatedBy) {
+    const question = await Question.findByPk(questionId);
+    if (!question) return null;
+
+    const newDisplayOrder = await this.getNextDisplayOrder(newTopicId, newSubTopicId);
+    
+    await question.update({
+      topicId: newTopicId,
+      subTopicId: newSubTopicId,
+      displayOrder: newDisplayOrder,
+      updatedBy
+    });
+
+    return await this.getQuestionById(questionId);
+  }
+
+  // Copy question to another topic/subtopic
+  static async copyQuestion(questionId, targetTopicId, targetSubTopicId = null, updatedBy) {
+    const question = await this.getQuestionById(questionId);
+    if (!question) return null;
+
+    const newDisplayOrder = await this.getNextDisplayOrder(targetTopicId, targetSubTopicId);
+    
+    const newQuestion = await Question.create({
+      question: `${question.question} (Copy)`,
+      description: question.description,
+      questionType: question.questionType,
+      maxScore: question.maxScore,
+      topicId: targetTopicId,
+      subTopicId: targetSubTopicId,
+      displayOrder: newDisplayOrder,
+      isActive: question.isActive,
+      createdBy: updatedBy,
+      updatedBy: updatedBy
+    });
+
+    return await this.getQuestionById(newQuestion.id);
+  }
+
+  // Get question breadcrumb path
+  static async getQuestionBreadcrumb(questionId) {
+    const question = await Question.findByPk(questionId, {
+      include: [
+        {
+          model: Topic,
+          as: 'topic',
+          attributes: ['id', 'topicName'],
+          include: [{
+            model: Module,
+            as: 'module',
+            attributes: ['id', 'moduleName']
+          }]
+        },
+        {
+          model: SubTopic,
+          as: 'subTopic',
+          attributes: ['id', 'subTopicName'],
+          required: false
+        }
+      ]
+    });
+
+    if (!question) return null;
+
+    const breadcrumb = {
+      module: {
+        id: question.topic.module.id,
+        name: question.topic.module.name
+      },
+      topic: {
+        id: question.topic.id,
+        name: question.topic.topicName
+      },
+      question: {
+        id: question.id,
+        question: question.question
+      }
+    };
+
+    if (question.subTopic) {
+      breadcrumb.subTopic = {
+        id: question.subTopic.id,
+        name: question.subTopic.subTopicName
+      };
+    }
+
+    return breadcrumb;
+  }
+
+  // Get questions by module
+  static async getQuestionsByModule(moduleId, options = {}) {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = 'displayOrder',
+      sortOrder = 'ASC'
+    } = options;
+
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await Question.findAndCountAll({
+      include: [{
+        model: Topic,
+        as: 'topic',
+        where: { moduleId },
+        attributes: ['id', 'topicName']
+      }],
+      limit,
+      offset,
+      order: [['topic', 'displayOrder', 'ASC'], [sortBy, sortOrder]]
+    });
+
+    return {
+      questions: rows,
+      total: count
+    };
+  }
+
+  // Get performance statistics for question
+  static async getQuestionPerformanceStats(questionId, options = {}) {
+    const {
+      startDate,
+      endDate,
+      stateId,
+      districtId,
+      rangeId
+    } = options;
+
+    const whereClause = { questionId };
+    
+    if (startDate && endDate) {
+      whereClause.reportingPeriod = {
+        [Op.between]: [startDate, endDate]
+      };
+    }
+
+    if (stateId) {
+      whereClause.stateId = stateId;
+    }
+
+    if (districtId) {
+      whereClause.districtId = districtId;
+    }
+
+    if (rangeId) {
+      whereClause.rangeId = rangeId;
+    }
+
+    const stats = await PerformanceStatistic.findAll({
+      where: whereClause,
+      attributes: [
+        [PerformanceStatistic.sequelize.fn('AVG', PerformanceStatistic.sequelize.col('score')), 'avgScore'],
+        [PerformanceStatistic.sequelize.fn('MIN', PerformanceStatistic.sequelize.col('score')), 'minScore'],
+        [PerformanceStatistic.sequelize.fn('MAX', PerformanceStatistic.sequelize.col('score')), 'maxScore'],
+        [PerformanceStatistic.sequelize.fn('COUNT', PerformanceStatistic.sequelize.col('id')), 'responseCount']
+      ]
+    });
+
+    return stats[0] || {
+      avgScore: 0,
+      minScore: 0,
+      maxScore: 0,
+      responseCount: 0
+    };
+  }
+
+  // Get questions with formula dependencies for a topic
+  static async getQuestionsWithFormulas(topicId) {
+    return await Question.findAll({
+      where: { 
+        topicId,
+        active: true,
+        formula: { [Op.not]: null }
+      },
+      include: [
+        {
+          model: Topic,
+          as: 'topic',
+          attributes: ['id', 'topicName', 'formType']
+        },
+        {
+          model: SubTopic,
+          as: 'subTopic',
+          attributes: ['id', 'subTopicName'],
+          required: false
+        }
+      ],
+      order: [['priority', 'ASC']]
+    });
+  }
+
+  // Get questions for formula builder (to reference other questions)
+  static async getQuestionsForFormula(topicId, excludeQuestionId = null) {
+    const whereClause = { 
+      topicId,
+      active: true
+    };
+
+    if (excludeQuestionId) {
+      whereClause.id = { [Op.not]: excludeQuestionId };
+    }
+
+    return await Question.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: SubTopic,
+          as: 'subTopic',
+          attributes: ['id', 'subTopicName'],
+          required: false
+        }
+      ],
+      attributes: ['id', 'question', 'priority', 'subTopicId'],
+      order: [['priority', 'ASC']]
+    });
+  }
+
+  // Validate question types and default values
+  static validateQuestionType(type, defaultVal, defaultTo) {
+    const validTypes = ['Text', 'Date', 'Number', 'Price', 'MultiChoice'];
+    const validDefaultSources = ['NONE', 'PREVIOUS', 'QUESTION', 'PS', 'SUB', 'CIRCLE', 'PSOP'];
+
+    if (!validTypes.includes(type)) {
+      throw new Error(`Invalid question type: ${type}. Valid types are: ${validTypes.join(', ')}`);
+    }
+
+    if (defaultTo && !validDefaultSources.includes(defaultTo)) {
+      throw new Error(`Invalid default source: ${defaultTo}. Valid sources are: ${validDefaultSources.join(', ')}`);
+    }
+
+    // Type-specific validations
+    if (type === 'Number' || type === 'Price') {
+      if (defaultVal && isNaN(parseFloat(defaultVal))) {
+        throw new Error(`Default value for ${type} must be a valid number`);
+      }
+    }
+
+    if (type === 'Date') {
+      if (defaultVal && !Date.parse(defaultVal)) {
+        throw new Error('Default value for Date must be a valid date');
+      }
+    }
+
+    return true;
+  }
+
+  // Parse and validate formula
+  static validateFormula(formula, availableQuestions) {
+    if (!formula) return true;
+
+    // Basic formula validation
+    const formulaRegex = /^[\d+\-*/()\s]+$/;
+    const questionRefRegex = /Q(\d+)/g;
+
+    // Extract question references
+    let match;
+    const referencedQuestions = [];
+    while ((match = questionRefRegex.exec(formula)) !== null) {
+      referencedQuestions.push(parseInt(match[1]));
+    }
+
+    // Validate that referenced questions exist
+    const availableIds = availableQuestions.map(q => q.id);
+    for (const refId of referencedQuestions) {
+      if (!availableIds.includes(refId)) {
+        throw new Error(`Formula references question ID ${refId} which does not exist or is not available`);
+      }
+    }
+
+    return true;
+  }
+
+  // Get questions by topic and subtopic for form generation
+  static async getQuestionsForForm(topicId, subTopicId = null) {
+    const whereClause = { 
+      topicId,
+      active: true
+    };
+
+    if (subTopicId) {
+      whereClause.subTopicId = subTopicId;
+    }
+
+    return await Question.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: Topic,
+          as: 'topic',
+          attributes: ['id', 'topicName', 'formType', 'isShowCummulative', 'isShowPrevious']
+        },
+        {
+          model: SubTopic,
+          as: 'subTopic',
+          attributes: ['id', 'subTopicName'],
+          required: false
+        }
+      ],
+      order: [['priority', 'ASC']]
+    });
+  }
+
+}
+
+module.exports = QuestionService;

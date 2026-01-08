@@ -1,0 +1,46 @@
+<div class="home-wrap">
+  <div class="main-area">
+    <div class="profile-row">
+      <div class="welcome">
+        <h2>Welcome</h2>
+        <h2>Welcome To Bihar Special Armed Police Field Report Portal</h2>
+        <div class="user-meta">
+          <div class="meta-left">
+            <div><strong>User Id :</strong> {{ user.email }}</div>
+            <div><strong>Contact No :</strong> {{ user.contact }}</div>
+          </div>
+          <div class="meta-right">
+            <div><strong>Mobile No :</strong> {{ user.mobile }}</div>
+            <div><strong>Joining Date :</strong> {{ user.joiningDate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="avatar">
+        <img [src]="user.userImage" alt="User Image" />
+        <div class="username">{{ user.name }}</div>
+      </div>
+    </div>
+    <div class="cards-grid" *ngIf="roleId==1">
+      <div *ngFor="let card of cards" class="info-card" [ngStyle]="{'background-image': card.gradient}">
+        <div class="card-title">{{ card.title }}</div>
+        <div class="card-count">{{ card.count }}</div>
+      </div>
+    </div>
+
+   
+  </div>
+
+  <aside class="side-area" *ngIf="roleId==1">
+    <div class="side-header" style="position:sticky;top:0;background:transparent;padding-bottom:8px;">
+      <h3>Dashboard</h3>
+      <!-- <div class="side-sub">Data Entry Status</div> -->
+    </div>
+    <div class="status-list">
+      <div *ngFor="let item of dataStatus" class="status-item">
+        <div class="loc">{{ item.name }}</div>
+        <div class="progress">({{ item.progress }})</div>
+      </div>
+    </div>
+  </aside>
+</div>

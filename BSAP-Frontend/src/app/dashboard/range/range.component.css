@@ -1,0 +1,66 @@
+/* Component-specific styles for Range component */
+
+/* Email cell specific styling */
+.email-cell {
+  max-width: 200px;
+  word-break: break-all;
+  font-size: 0.85rem;
+}
+.permissions-container {
+  padding: 20px;
+}
+
+.permissions-container h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+/* Simple modal styling */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-dialog {
+  margin: 50px auto;
+  max-width: 700px;
+  width: 90%;
+}
+
+.modal-content {
+  background: #fff;
+  /* padding: 20px; */
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+.page-title-subheading {
+  margin-top: 4px; /* small spacing below heading */
+  font-size: 14px;
+  color: #6c757d; /* softer subheading color */
+}
+.app-page-title {
+  padding: 20px 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+.page-title-icon i {
+  font-size: 50px;  /* larger icon */
+  color: #ff6600;
+}
+.page-title-heading h2 {
+  margin: 0; /* remove extra margin */
+}
+.page-title-icon {
+  font-size: 24px;
+  margin-right: 10px;
+}
+
+.table-panel {
+  overflow-x: auto;
+}
+.btn {
+  margin: 5px 5px;
+}
+

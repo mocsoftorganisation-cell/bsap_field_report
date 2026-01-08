@@ -1,0 +1,310 @@
+<div class="data-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <div class="icon">📄</div>
+      <h1>List Of Topics</h1>
+    </div>
+    <button class="add-btn" (click)="showAddTopicModal()">Add Topic</button>
+  </div>
+
+  <!-- Table Controls -->
+  <div class="table-controls">
+    <div class="show-entries">
+      <label for="entries">Show</label>
+      <select id="entries" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      <span>entries</span>
+    </div>
+
+    <div class="search-box">
+      <label for="search">Search:</label>
+      <input type="text" id="search" [(ngModel)]="searchTerm" (input)="onSearch()" placeholder="Search topics..." />
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <!-- Loading State -->
+    <div *ngIf="isLoading && topics.length === 0" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading topics...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="loadingError && topics.length === 0" class="error-state">
+      <p>{{ loadingError }}</p>
+      <button class="retry-btn" (click)="loadTopics()">Retry</button>
+    </div>
+
+    <!-- Table -->
+    <table class="data-table" *ngIf="!isLoading || topics.length > 0">
+      <thead>
+        <tr>
+          <!-- <th (click)="sortTable('id')" class="sortable">
+            Id
+            <span class="sort-icon" [class.active]="sortColumn === 'id'">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th> -->
+          <th (click)="sortTable('moduleName')" class="sortable">
+            Module Name
+            <span class="sort-icon" [class.active]="sortColumn === 'moduleName'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('topicName')" class="sortable">
+            Topic Name
+            <span class="sort-icon" [class.active]="sortColumn === 'topicName'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('subName')" class="sortable">
+            Topic Sub Name
+            <span class="sort-icon" [class.active]="sortColumn === 'subName'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('priority')" class="sortable">
+            Priority
+            <span class="sort-icon" [class.active]="sortColumn === 'priority'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('active')" class="sortable">
+            Active
+            <span class="sort-icon" [class.active]="sortColumn === 'active'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('formType')" class="sortable">
+            Form Type
+            <span class="sort-icon" [class.active]="sortColumn === 'formType'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('isShowPrevious')" class="sortable">
+            Previous
+            <span class="sort-icon" [class.active]="sortColumn === 'isShowPrevious'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('isShowCummulative')" class="sortable">
+            Cumulative
+            <span class="sort-icon" [class.active]="sortColumn === 'isShowCummulative'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th>Edit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let topic of paginatedTopics">
+          <!-- <td>{{ topic.id }}</td> -->
+          <td>{{ topic.moduleName || 'N/A' }}</td>
+          <td>{{ topic.topicName }}</td>
+          <td>{{ topic.subName || 'N/A' }}</td>
+          <td>
+            <span class="priority-badge">{{ topic.priority }}</span>
+          </td>
+          <td>
+            <span class="status-badge" [class.active]="topic.active" [class.inactive]="!topic.active">
+              {{ topic.active ? 'YES' : 'NO' }}
+            </span>
+          </td>
+          <td>{{ topic.formType || 'N/A' }}</td>
+          <td>
+            <span class="status-badge" [class.active]="topic.isShowPrevious" [class.inactive]="!topic.isShowPrevious">
+              {{ topic.isShowPrevious ? 'YES' : 'NO' }}
+            </span>
+          </td>
+          <td>
+            <span class="status-badge" [class.active]="topic.isShowCummulative"
+              [class.inactive]="!topic.isShowCummulative">
+              {{ topic.isShowCummulative ? 'YES' : 'NO' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="edit-btn" (click)="editTopic(topic)" title="Edit Topic">
+                Edit
+              </button>
+              <button class="deactivate-btn" [class.activate]="!topic.active" (click)="toggleTopicStatus(topic)"
+                [title]="topic.active ? 'Deactivate Topic' : 'Activate Topic'">
+                {{ topic.active ? 'Deactivate' : 'Activate' }}
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="paginatedTopics.length === 0 && !isLoading">
+          <td colspan="10" class="no-data">No topics found matching your search criteria.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Section -->
+  <div class="pagination-section" *ngIf="totalTopics > 0">
+    <div class="pagination-info">
+      Showing {{ getStartRecord() }} to {{ getEndRecord() }} of {{ totalTopics }} entries
+    </div>
+
+    <div class="pagination-controls">
+      <button class="page-btn" [disabled]="currentPage === 1" (click)="prevPage()">
+        Previous
+      </button>
+
+      <button *ngFor="let page of getVisiblePages()" class="page-btn" [class.active]="page === currentPage"
+        (click)="goToPage(page)">
+        {{ page }}
+      </button>
+
+      <button class="page-btn" [disabled]="currentPage === getTotalPages()" (click)="nextPage()">
+        Next
+      </button>
+    </div>
+  </div>
+
+  <!-- Add Topic Modal -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">{{ isEditMode ? 'Edit Topic' : 'Add Topic' }}</h4>
+          <button type="button" class="close-btn" (click)="closeModal()">
+            <span>&times;</span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <form (ngSubmit)="saveTopic()" #topicForm="ngForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="moduleSelect">Module</label>
+                <select id="moduleSelect" name="moduleId" class="form-control" [(ngModel)]="currentTopic.moduleId"
+                  required #moduleSelect="ngModel">
+                  <option value="">Select Module</option>
+                  <option *ngFor="let module of availableModules" [value]="module.id">
+                    {{ module.moduleName }}
+                  </option>
+                </select>
+                <div class="error-message" *ngIf="moduleSelect.invalid && moduleSelect.touched">
+                  Module selection is required
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="topicName">Name</label>
+                <input type="text" id="topicName" name="topicName" class="form-control"
+                  [(ngModel)]="currentTopic.topicName" required #topicNameInput="ngModel"
+                  placeholder="Enter topic name">
+                <div class="error-message" *ngIf="topicNameInput.invalid && topicNameInput.touched">
+                  Topic name is required
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="subName">Sub Name</label>
+                <input type="text" id="subName" name="subName" class="form-control" [(ngModel)]="currentTopic.subName"
+                  placeholder="Enter topic sub name">
+              </div>
+
+              <div class="form-group">
+                <label for="priority">Priority</label>
+                <input type="number" id="priority" name="priority" class="form-control"
+                  [(ngModel)]="currentTopic.priority" required min="1" #priorityInput="ngModel"
+                  placeholder="Enter priority number">
+                <div class="error-message" *ngIf="priorityInput.invalid && priorityInput.touched">
+                  Priority is required and must be a positive number
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="formTypeSelect">Form Type</label>
+                <select id="formTypeSelect" name="formType" class="form-control" [(ngModel)]="currentTopic.formType"
+                  required #formTypeSelect="ngModel">
+                  <option value="">Select Form Type</option>
+                  <option value="NORMAL">NORMAL</option>
+                  <option value="Q/ST">QUESTION / SUBTOPIC</option>
+                  <option value="ST/Q">SUBTOPIC / QUESTION</option>
+                </select>
+                <div class="error-message" *ngIf="formTypeSelect.invalid && formTypeSelect.touched">
+                  Form type selection is required
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row checkbox-row">
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" name="isShowPrevious" [(ngModel)]="currentTopic.isShowPrevious">
+                  <span class="checkmark"></span>
+                  Show/Hide Previous
+                </label>
+              </div>
+
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" name="isShowCummulative" [(ngModel)]="currentTopic.isShowCummulative">
+                  <span class="checkmark"></span>
+                  Show/Hide Cumulative
+                </label>
+              </div>
+            </div>
+
+            <div class="form-row checkbox-row">
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" name="isStartJan" [(ngModel)]="currentTopic.isStartJan">
+                  <span class="checkmark"></span>
+                  Is Starting From First Month Of Cumulative Year
+                </label>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="startMonth">Starting Month</label>
+                <select id="startMonth" name="startMonth" class="form-control" [(ngModel)]="currentTopic.startMonth">
+                  <option value="">Select Start Month</option>
+                  <option *ngFor="let month of months" [value]="month.value">
+                    {{ month.label }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="endMonth">Ending Month</label>
+                <select id="endMonth" name="endMonth" class="form-control" [(ngModel)]="currentTopic.endMonth">
+                  <option value="">Select End Month</option>
+                  <option *ngFor="let month of months" [value]="month.value">
+                    {{ month.label }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="close-btn-footer" (click)="closeModal()">
+                Close
+              </button>
+              <button type="submit" class="save-btn" [disabled]="topicForm.invalid || isLoading">
+                <span *ngIf="isLoading" class="spinner"></span>
+                {{ isEditMode ? 'Update' : 'Save' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

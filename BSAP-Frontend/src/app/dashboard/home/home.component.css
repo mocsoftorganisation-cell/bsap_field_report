@@ -1,0 +1,217 @@
+.home-wrap {
+  display: flex;
+  gap: 24px;
+  padding: 18px 28px;
+}
+
+.main-area {
+  flex: 1 1 auto;
+  background: transparent;
+}
+
+.profile-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  margin-bottom: 18px; /* space after header */
+  border-bottom: 3px solid rgba(0,0,0,0.12); /* subtle divider */
+}
+
+/* center the welcome block (title + meta) while avatar stays right */
+.welcome {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* center title and meta horizontally */
+  text-align: center; /* ensure text centered inside welcome */
+}
+
+.welcome h2 {
+  margin: 6px 0 6px 0;
+  line-height: 1.08;
+  font-weight: 700;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Distinct styles for the three header lines */
+.welcome h2:nth-of-type(1) {
+  color: #0b5ed7; /* blue */
+  font-size: 22px;
+}
+.welcome h2:nth-of-type(2) {
+  color: #16a34a; /* green */
+  font-size: 18px;
+  font-weight: 600;
+}
+.welcome h2:nth-of-type(3) {
+  color: #ef4444; /* red-ish accent */
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.user-meta {
+  color: #475569;
+  font-size: 13px;
+  margin-top: 6px;
+  display: flex;
+  gap: 36px;
+  justify-content: center; /* center the two meta columns under the title */
+}
+
+.user-meta .meta-left,
+.user-meta .meta-right {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.avatar {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: white;
+  padding: 8px;
+  border: 4px solid rgba(2,6,23,0.03);
+}
+
+.username {
+  margin-top: 6px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.info-card {
+  min-height: 72px;
+  border-radius: 12px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  box-shadow: 0 12px 28px rgba(2,6,23,0.06);
+  text-align: left;
+  transition: transform .18s ease, box-shadow .18s ease;
+  overflow: hidden;
+}
+
+.card-title {
+  font-weight: 600;
+  text-transform: none;
+  text-align: left;
+}
+
+.card-count {
+  background: rgba(0,0,0,0.18); /* darker pill for contrast */
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 800;
+  margin-left: 12px;
+  min-width: 48px;
+  text-align: center;
+}
+
+.info-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(2,6,23,0.12);
+}
+
+.info-card::after {
+  /* subtle dark overlay to improve text contrast on light gradients */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.08));
+  opacity: 1;
+  pointer-events: none;
+}
+
+.cards-grid > div {
+  position: relative; /* for ::after */
+}
+
+.quote {
+  margin-top: 18px;
+  color: #60a5fa;
+  font-style: italic;
+  text-align: center;
+}
+
+.side-area {
+  width: 300px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 8px 20px rgba(2,6,23,0.06);
+  height: 620px;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-area h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.side-sub {
+  color: #94a3b8;
+  margin: 6px 0 12px 0;
+}
+
+.status-list {
+  margin-top: 8px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding-right: 6px;
+  text-align: left;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  color: #ef4444;
+  font-size: 13px;
+  padding: 8px 6px;
+  align-items: center;
+}
+
+.status-item .loc {
+  flex: 1 1 auto;
+}
+
+.status-item .progress {
+  margin-left: 8px;
+  color: #ef4444;
+}
+
+@media (max-width: 960px) {
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .side-area {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,437 @@
+
+
+.login-premium-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, #23395d 0%, #3a4a7c 60%, #667eea 100%);
+  padding: 2rem;
+}
+
+.login-premium-card {
+  display: flex;
+  flex-direction: row;
+  background: rgba(255,255,255,0.85);
+  border-radius: 22px;
+  box-shadow: 0 12px 40px rgba(44,62,80,0.22);
+  width: 820px;
+  max-width: 98vw;
+  min-height: 340px;
+  overflow: hidden;
+  animation: fadeIn 0.5s cubic-bezier(.4,0,.2,1);
+  backdrop-filter: blur(8px);
+}
+
+
+.login-premium-left {
+  background: linear-gradient(135deg, #181f2c 0%, #23395d 100%);
+  color: #fff;
+  width: 320px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem 2rem 1.5rem;
+  border-top-left-radius: 22px;
+  border-bottom-left-radius: 22px;
+  box-shadow: 2px 0 18px rgba(44,62,80,0.12);
+  position: relative;
+}
+
+.police-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 1.2rem 1rem 1rem 1rem;
+  box-shadow: 0 2px 12px rgba(44,62,80,0.10);
+  margin-bottom: 1.2rem;
+}
+.police-logo {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 0.7rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(44,62,80,0.10);
+  border: 3px solid #ffd700;
+}
+.badge-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffd700;
+  letter-spacing: 1px;
+  margin-bottom: 0.2rem;
+  text-shadow: 0 1px 4px #23395d;
+}
+.badge-sub {
+  font-size: 1rem;
+  color: #e0e7ff;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 1px 2px #23395d;
+}
+.police-accent {
+  width: 80%;
+  height: 6px;
+  background: linear-gradient(90deg, #ffd700 0%, #2563eb 100%);
+  border-radius: 3px;
+  margin: 0.5rem auto 0 auto;
+}
+
+.login-premium-right {
+  flex: 1;
+  padding: 2.5rem 2.2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.login-header {
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+.login-header h2 {
+  color: #1e293b;
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.5px;
+}
+.login-desc {
+  color: #3a4a7c;
+  font-size: 1.08rem;
+  font-weight: 500;
+}
+.login-form {
+  margin-bottom: 1.2rem;
+}
+.form-group {
+  margin-bottom: 1.2rem;
+}
+.form-group label {
+  display: block;
+  color: #374151;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+.form-group input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.95);
+  font-weight: 500;
+}
+.form-group input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+.error-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: #fee2e2;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+}
+.login-submit-btn {
+  width: 100%;
+  background: linear-gradient(90deg, #2563eb 0%, #ffd700 100%);
+  color: #fff;
+  padding: 0.95rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+  letter-spacing: 0.5px;
+}
+.login-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(90deg, #1d4ed8 0%, #ffd700 100%);
+  transform: translateY(-1px);
+}
+.login-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.login-footer {
+  text-align: left;
+  margin-top: 1.2rem;
+}
+.back-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: color 0.3s ease;
+  margin-bottom: 0.5rem;
+}
+.back-btn:hover {
+  color: #2563eb;
+}
+.password-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0;
+  z-index: 1;
+}
+.password-toggle:hover {
+  opacity: 0.7;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.checkbox-label {
+  font-size: 1rem;
+  cursor: pointer;
+  margin: 0 1.2rem 0 0;
+  font-weight: 500;
+  color: #374151;
+}
+.checkbox-group input[type="checkbox"] {
+  margin-right: 0.3rem;
+  transform: scale(1.15);
+}
+.forgot-password {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.98rem;
+  transition: color 0.3s ease;
+}
+.forgot-password:hover {
+  color: #ffd700;
+  text-decoration: underline;
+}
+.register-link {
+  text-align: left;
+  margin-top: 1rem;
+  font-size: 1rem;
+  color: #6b7280;
+}
+.register-link a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+.register-link a:hover {
+  color: #ffd700;
+  text-decoration: underline;
+}
+@media (max-width: 900px) {
+  .login-premium-card {
+    width: 98vw;
+    flex-direction: column;
+    min-height: 0;
+    border-radius: 22px;
+  }
+  .login-premium-left {
+    width: 100%;
+    min-width: 0;
+    border-radius: 22px 22px 0 0;
+    box-shadow: none;
+    padding: 1.5rem 1rem;
+  }
+  .login-premium-right {
+    padding: 2rem 1rem;
+  }
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-header h2 {
+  color: #1e293b;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.login-header p {
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.login-form {
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  color: #374151;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: #fee2e2;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+}
+
+.login-submit-btn {
+  width: 100%;
+  background: #2563eb;
+  color: white;
+  padding: 0.875rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.login-submit-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.login-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-footer {
+  text-align: center;
+}
+
+
+/* Footer removed as requested */
+.eye-icon {
+  font-size: 1.3rem;
+  color: #374151;
+  vertical-align: middle;
+}
+.password-toggle:hover {
+  opacity: 0.7;
+}
+
+.checkbox-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin: 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-right: 8px;
+  transform: scale(1.1);
+}
+
+.forgot-password {
+  color: #667eea;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+.forgot-password:hover {
+  color: #5a67d8;
+  text-decoration: underline;
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.register-link a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.register-link a:hover {
+  color: #5a67d8;
+  text-decoration: underline;
+}
+
+.menu-loading {
+  padding: 1rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #374151;
+}
+
+.user-email {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-style: italic;
+}

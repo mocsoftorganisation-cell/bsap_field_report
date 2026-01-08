@@ -1,0 +1,262 @@
+<div class="role-permission-container">
+  <div class="header">
+    <div class="title-section">
+      <div class="icon">🔐</div>
+      <h1>Role Permissions</h1>
+    </div>
+    <div *ngIf="roleId && roleName" class="role-info">
+      <span class="role-badge">
+        <strong>{{ roleName }}</strong> (ID: {{ roleId }})
+      </span>
+    </div>
+    <div *ngIf="!roleId" class="no-role-selected">
+      <p>No role selected. Please select a role from the roles page.</p>
+    </div>
+  </div>
+  
+  <!-- Permissions Management Interface -->
+  <div class="permissions-content" *ngIf="roleId">
+    
+    <!-- Permission Types Legend -->
+    <!-- <div class="permission-types-legend">
+      <h3>Permission Types</h3>
+      <div class="legend-items">
+        <div class="legend-item read">
+          <span class="legend-icon">👁️</span>
+          <span>Read - View access</span>
+        </div>
+        <div class="legend-item write">
+          <span class="legend-icon">✏️</span>
+          <span>Write - Create/Edit access</span>
+        </div>
+        <div class="legend-item delete">
+          <span class="legend-icon">🗑️</span>
+          <span>Delete - Remove access</span>
+        </div>
+      </div>
+    </div> -->
+
+    <!-- Bulk Actions -->
+    <div class="bulk-actions">
+      <button class="bulk-btn select-all" (click)="selectAllPermissions()">Select All</button>
+      <button class="bulk-btn deselect-all" (click)="deselectAllPermissions()">Deselect All</button>
+      <button class="save-btn" (click)="savePermissions()">Save Permissions</button>
+    </div>
+
+    <!-- Menu Permissions -->
+    <div class="permissions-section">
+      <div class="section-header">
+        <h3>📋 Menu Permissions</h3>
+        <div class="section-controls">
+          <label class="select-all-section">
+            <input type="checkbox" (change)="toggleAllMenus($event)" [checked]="areAllMenusSelected()">
+            Select All Menus
+          </label>
+        </div>
+      </div>
+      
+      <div class="permissions-table">
+        <div class="table-header">
+          <div class="resource-name">Menu Name</div>
+          <div class="permission-types">
+            <span>Select</span>
+          </div>
+        </div>
+        
+        <div class="permission-row" *ngFor="let menu of menus">
+          <div class="resource-info">
+            <span class="resource-name">{{ menu.name }}</span>
+            <span class="resource-description">{{ menu.description }}</span>
+          </div>
+          <div class="permission-checkboxes">
+            <label class="permission-checkbox select">
+              <input type="checkbox" 
+                     [(ngModel)]="menu.permissions.selected"
+                     (change)="onPermissionChange()">
+              <span class="checkmark"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submenu Permissions -->
+    <div class="permissions-section">
+      <div class="section-header">
+        <h3>📂 Submenu Permissions</h3>
+        <div class="section-controls">
+          <label class="select-all-section">
+            <input type="checkbox" (change)="toggleAllSubmenus($event)" [checked]="areAllSubmenusSelected()">
+            Select All Submenus
+          </label>
+        </div>
+      </div>
+      
+      <div class="permissions-table">
+        <div class="table-header">
+          <div class="resource-name">Submenu Name</div>
+          <div class="permission-types">
+            <span>Select</span>
+          </div>
+        </div>
+        
+        <div class="permission-row" *ngFor="let submenu of submenus">
+          <div class="resource-info">
+            <span class="resource-name">{{ submenu.name }}</span>
+            <span class="resource-description">Parent: {{ submenu.parentMenu }}</span>
+          </div>
+          <div class="permission-checkboxes">
+            <label class="permission-checkbox select">
+              <input type="checkbox" 
+                     [(ngModel)]="submenu.permissions.selected"
+                     (change)="onPermissionChange()">
+              <span class="checkmark"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      <!-- Topic Permissions -->
+    <div class="permissions-section">
+      <div class="section-header">
+        <h3>📚 Topic Permissions</h3>
+        <div class="section-controls">
+          <label class="select-all-section">
+            <input type="checkbox" (change)="toggleAllTopics($event)" [checked]="areAllTopicsSelected()">
+            Select All Topics
+          </label>
+        </div>
+      </div>
+       <div class="permissions-table">
+        <div class="table-header">
+          <div class="resource-name">Topic Name</div>
+          <div class="permission-types">
+            <span>Select</span>
+          </div>
+        </div>
+        
+        <div class="permission-row" *ngFor="let topic of topics">
+          <div class="resource-info">
+            <span class="resource-name">{{ topic.name }}  {{ topic.subName ? '(' + topic.subName+ ')' : '' }}</span>
+            <span class="resource-description">{{ topic.description }}</span>
+          </div>
+       <div class="permission-checkboxes">
+            <label class="permission-checkbox select">
+              <input type="checkbox" 
+                     [(ngModel)]="topic.permissions.selected"
+                     (change)="onPermissionChange()">
+              <span class="checkmark"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      <!-- Question Permissions -->
+    <div class="permissions-section">
+      <div class="section-header">
+        <h3>❓ Question Permissions</h3>
+        <div class="section-controls">
+          <label class="select-all-section">
+            <input type="checkbox" (change)="toggleAllQuestions($event)" [checked]="areAllQuestionsSelected()">
+            Select All Questions
+          </label>
+        </div>
+      </div>
+       <div class="permissions-table">
+        <div class="table-header">
+          <div class="resource-name">Question Type</div>
+          <div class="permission-types">
+            <span>Select</span>
+          </div>
+        </div>
+        
+        <div class="permission-row" *ngFor="let question of questions">
+          <div class="resource-info">
+            <span class="resource-name">{{ question.name }}</span>
+            <span class="resource-description">{{ question.description }}</span>
+          </div>
+          <div class="permission-checkboxes">
+            <label class="permission-checkbox select">
+
+               <input type="checkbox" 
+                     [(ngModel)]="question.permissions.selected"
+                     (change)="onPermissionChange()">
+              <span class="checkmark"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- URL Permissions -->
+    <div class="permissions-section">
+      <div class="section-header">
+        <h3>🔗 URL Permissions</h3>
+        <div class="section-controls">
+          <label class="select-all-section">
+            <input type="checkbox" (change)="toggleAllUrls($event)" [checked]="areAllUrlsSelected()">
+            Select All URLs
+          </label>
+        </div>
+      </div>
+      
+      <div class="permissions-table">
+        <div class="table-header">
+          <div class="resource-name">URL Path</div>
+          <div class="permission-types">
+            <span>Select</span>
+          </div>
+        </div>
+        
+        <div class="permission-row" *ngFor="let url of urls">
+          <div class="resource-info">
+            <span class="resource-name">{{ url.path }}</span>
+            <span class="resource-description">{{ url.method }} - {{ url.description }}</span>
+          </div>
+          <div class="permission-checkboxes">
+            <label class="permission-checkbox select">
+              <input type="checkbox" 
+                     [(ngModel)]="url.permissions.selected"
+                     (change)="onPermissionChange()">
+              <span class="checkmark"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Section -->
+    <div class="permissions-summary">
+      <h4>Permission Summary</h4>
+      <div class="summary-stats">
+        <div class="stat-item">
+          <span class="stat-number">{{ getSelectedPermissionsCount() }}</span>
+          <span class="stat-label">Total Permissions Selected</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ getMenuPermissionsCount() }}</span>
+          <span class="stat-label">Menu Permissions</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ getSubmenuPermissionsCount() }}</span>
+          <span class="stat-label">Submenu Permissions</span>
+        </div>
+         <div class="stat-item">
+          <span class="stat-number">{{ getTopicPermissionsCount() }}</span>
+          <span class="stat-label">Topic Permissions</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ getQuestionPermissionsCount() }}</span>
+          <span class="stat-label">Question Permissions</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ getUrlPermissionsCount() }}</span>
+          <span class="stat-label">URL Permissions</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

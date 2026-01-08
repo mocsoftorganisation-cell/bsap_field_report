@@ -1,0 +1,613 @@
+/* Role Permission Component Styles */
+
+.role-permission-container {
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Header Section */
+.header {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon {
+  color: #6f42c1;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.header h1 {
+  color: #333;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.role-info .role-badge {
+  background: linear-gradient(45deg, #6f42c1, #5a32a3);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.no-role-selected {
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+/* Permission Types Legend */
+.permission-types-legend {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.permission-types-legend h3 {
+  color: #333;
+  margin: 0 0 15px 0;
+  font-size: 18px;
+}
+
+.legend-items {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.legend-item.read {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.legend-item.write {
+  background: #e8f5e8;
+  color: #388e3c;
+}
+
+.legend-item.delete {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.legend-item.select {
+  background: #f3e5f5;
+  color: #6f42c1;
+}
+
+.legend-icon {
+  font-size: 16px;
+}
+
+/* Bulk Actions */
+.bulk-actions {
+  background: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+/* Enhanced shadow when sticky */
+.bulk-actions.sticky {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.bulk-btn {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.bulk-btn.select-all {
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.bulk-btn.select-all:hover {
+  background: #28a745;
+  color: white;
+}
+
+.bulk-btn.deselect-all {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.bulk-btn.deselect-all:hover {
+  background: #dc3545;
+  color: white;
+}
+
+.save-btn {
+  background: linear-gradient(45deg, #6f42c1, #5a32a3);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+  margin-left: auto;
+}
+
+.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(111, 66, 193, 0.3);
+}
+
+/* Permissions Sections */
+.permissions-section {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.section-header {
+  background: #f8f9fa;
+  padding: 15px 20px;
+  border-bottom: 1px solid #dee2e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-header h3 {
+  color: #333;
+  margin: 0;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.select-all-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+}
+
+.select-all-section input[type="checkbox"] {
+  margin: 0;
+}
+
+/* Permissions Table */
+.permissions-table {
+  width: 100%;
+}
+
+.table-header {
+  background: #f8f9fa;
+  padding: 15px 20px;
+  display: grid;
+  grid-template-columns: 1fr 80px;
+  gap: 20px;
+  align-items: center;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: 600;
+  color: #495057;
+}
+
+.permission-types {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  text-align: center;
+}
+
+.permission-row {
+  padding: 15px 20px;
+  display: grid;
+  grid-template-columns: 1fr 80px;
+  gap: 20px;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.permission-row:hover {
+  background-color: #f8f9fa;
+}
+
+.resource-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resource-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.resource-description {
+  color: #666;
+  font-size: 12px;
+}
+
+.permission-checkboxes {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  justify-items: center;
+}
+
+/* Custom Checkbox Styles */
+.permission-checkbox {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.permission-checkbox input[type="checkbox"] {
+  opacity: 0;
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.checkmark {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.permission-checkbox.read .checkmark {
+  border-color: #1976d2;
+}
+
+.permission-checkbox.write .checkmark {
+  border-color: #388e3c;
+}
+
+.permission-checkbox.delete .checkmark {
+  border-color: #d32f2f;
+}
+
+.permission-checkbox.select .checkmark {
+  border-color: #6f42c1;
+}
+
+.permission-checkbox input[type="checkbox"]:checked + .checkmark {
+  background-color: currentColor;
+}
+
+.permission-checkbox.read input[type="checkbox"]:checked + .checkmark {
+  background-color: #1976d2;
+}
+
+.permission-checkbox.write input[type="checkbox"]:checked + .checkmark {
+  background-color: #388e3c;
+}
+
+.permission-checkbox.delete input[type="checkbox"]:checked + .checkmark {
+  background-color: #d32f2f;
+}
+
+.permission-checkbox.select input[type="checkbox"]:checked + .checkmark {
+  background-color: #6f42c1;
+}
+
+.checkmark::after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 12px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.permission-checkbox input[type="checkbox"]:checked + .checkmark::after {
+  display: block;
+}
+
+.permission-checkbox:hover .checkmark {
+  transform: scale(1.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Permissions Summary */
+.permissions-summary {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.permissions-summary h4 {
+  color: #333;
+  margin: 0 0 15px 0;
+  font-size: 18px;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #6f42c1;
+}
+
+.stat-number {
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+  color: #6f42c1;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
+}
+
+
+
+
+/* chandani csss */
+
+/* Add these styles to your role-permission.component.css */
+
+.hierarchical-permissions {
+  margin-top: 20px;
+}
+
+.module-item,
+.topic-item,
+.question-item {
+  margin-bottom: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.module-header,
+.topic-header {
+  padding: 15px;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.module-header.expanded,
+.topic-header.expanded {
+  background-color: #e9ecef;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.expand-toggle {
+  margin-right: 10px;
+  font-size: 12px;
+  width: 20px;
+  text-align: center;
+}
+
+.module-info,
+.topic-info,
+.question-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.resource-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.resource-code {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.module-permissions,
+.topic-permissions,
+.question-permissions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.detailed-permissions {
+  display: flex;
+  gap: 10px;
+}
+
+.detailed-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.difficulty-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 10px;
+}
+
+.difficulty-badge.easy {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.difficulty-badge.medium {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.difficulty-badge.hard {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.topic-list {
+  padding-left: 30px;
+  border-left: 2px solid #e0e0e0;
+  margin-left: 20px;
+}
+
+.question-list {
+  padding-left: 30px;
+  border-left: 2px solid #f0f0f0;
+  margin-left: 20px;
+}
+
+.question-item {
+  padding: 10px;
+  background-color: #fafafa;
+  border: none;
+  border-radius: 3px;
+}
+
+.question-info {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .legend-items {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .bulk-actions {
+    flex-direction: column;
+    align-items: stretch;
+    position: sticky;
+    top: 0;
+    padding: 10px 15px;
+  }
+
+  .save-btn {
+    margin-left: 0;
+  }
+
+  .table-header,
+  .permission-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .permission-types {
+    justify-self: start;
+  }
+
+  .permission-checkboxes {
+    justify-self: start;
+  }
+
+  .summary-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .role-permission-container {
+    padding: 10px;
+  }
+
+  .header,
+  .permission-types-legend,
+  .permissions-section,
+  .permissions-summary {
+    padding: 15px;
+  }
+
+  .bulk-actions {
+    padding: 10px 15px;
+    gap: 10px;
+  }
+
+  .bulk-btn,
+  .save-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .permission-types {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+
+  .permission-checkboxes {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+}

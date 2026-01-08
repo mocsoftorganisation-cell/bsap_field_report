@@ -1,0 +1,285 @@
+<div class="data-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <div class="icon">🏠</div>
+      <h1>List Of Zone</h1>
+    </div>
+    <button class="add-btn" (click)="showAddRangeModal()">Add Zone</button>
+  </div>
+
+  <!-- Table Controls -->
+  <div class="table-controls">
+    <div class="show-entries">
+      <label for="entries">Show</label>
+      <select id="entries" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      <span>entries</span>
+    </div>
+    
+    <div class="search-box">
+      <label for="search">Search:</label>
+      <input 
+        type="text" 
+        id="search"
+        [(ngModel)]="searchTerm" 
+        (keyup.enter)="onSearch()" 
+        placeholder="Search Zone..."
+      />
+      <button (click)="onSearch()" class="search-btn p-2 rounded">Search</button>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="loading-indicator">
+    Loading Zone...
+  </div>
+
+  <!-- Table -->
+  <div class="table-container" *ngIf="!isLoading">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <!-- <th (click)="sortTable('id')" class="sortable">
+            Id
+            <span class="sort-icon" [class.active]="sortColumn === 'id'">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th> -->
+          <th (click)="sortTable('stateName')" class="sortable">
+            State Name
+            <span class="sort-icon" [class.active]="sortColumn === 'stateName'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('rangeName')" class="sortable">
+            Zone Name
+            <span class="sort-icon" [class.active]="sortColumn === 'rangeName'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('rangeHead')" class="sortable">
+            Zone Head
+            <span class="sort-icon" [class.active]="sortColumn === 'rangeHead'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th>Contact No</th>
+          <th>Mobile No</th>
+          <th>Email</th>
+          <th (click)="sortTable('active')" class="sortable">
+            Active
+            <span class="sort-icon" [class.active]="sortColumn === 'active'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let range of paginatedRanges; trackBy: trackByRangeId">
+          <!-- <td>{{ range.id }}</td> -->
+          <td>{{ getStateName(range) }}</td>
+          <td>{{ range.rangeName }}</td>
+          <td>{{ range.rangeHead }}</td>
+          <td>{{ range.rangeContactNo }}</td>
+          <td>{{ range.rangeMobileNo }}</td>
+          <td>{{ range.rangeEmail }}</td>
+          <td>
+            <span class="status-badge" [class.active]="range.active" [class.inactive]="!range.active">
+              {{ range.active ? 'YES' : 'NO' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="edit-btn" (click)="editRange(range)">Edit</button>
+              <button 
+                class="deactivate-btn" 
+                [class.activate]="!range.active"
+                (click)="toggleRangeStatus(range)"
+                [disabled]="isLoading"
+              >
+                {{ range.active ? 'Deactivate' : 'Activate' }}
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="paginatedRanges.length === 0 && !isLoading">
+          <td colspan="9" class="no-data">No Zone found</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="totalPages > 0 && !isLoading">
+    <div class="pagination-info">
+      Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to 
+      {{ Math.min(currentPage * itemsPerPage, totalItems) }} of {{ totalItems }} entries
+    </div>
+    
+    <div class="pagination">
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === 1" 
+        (click)="goToPage(currentPage - 1)"
+      >
+        Previous
+      </button>
+      
+      <button 
+        *ngFor="let page of getVisiblePages()" 
+        class="page-btn" 
+        [class.active]="page === currentPage"
+        [class.ellipsis]="page === -1"
+        (click)="page !== -1 && goToPage(page)"
+        [disabled]="page === -1"
+      >
+        {{ page === -1 ? '...' : page }}
+      </button>
+      
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === totalPages" 
+        (click)="goToPage(currentPage + 1)"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Range Modal -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header p-2">
+        <h4 class="modal-title p-1">{{ isEditMode ? 'Edit Zone' : 'Add Zone' }}</h4>
+        <button type="button" class="close-btn m-2" (click)="closeModal()" [disabled]="isLoading">
+          <span>&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body p-4">
+        <form (ngSubmit)="isEditMode ? updateRange() : addRange()" #rangeForm="ngForm">
+          <div class="form-group">
+            <label for="rangeName" class="required">Zone Name</label>
+            <input 
+              type="text" 
+              id="rangeName" 
+              name="rangeName" 
+              [(ngModel)]="currentRange.rangeName" 
+              #rangeName="ngModel"
+              required 
+              class="form-control"
+              [class.error]="rangeName.touched && rangeName.errors?.['required']"
+              [disabled]="isLoading"
+            />
+            <div class="error-message" *ngIf="rangeName.touched && rangeName.errors?.['required']">
+              Zone name is required
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="rangeHead" class="required">Zone Head</label>
+            <input 
+              type="text" 
+              id="rangeHead" 
+              name="rangeHead" 
+              [(ngModel)]="currentRange.rangeHead" 
+              #rangeHead="ngModel"
+              required 
+              class="form-control"
+              [class.error]="rangeHead.touched && rangeHead.errors?.['required']"
+              [disabled]="isLoading"
+            />
+            <div class="error-message" *ngIf="rangeHead.touched && rangeHead.errors?.['required']">
+              Zone head is required
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="rangeEmail">Email</label>
+            <input 
+              type="email" 
+              id="rangeEmail" 
+              name="rangeEmail" 
+              [(ngModel)]="currentRange.rangeEmail" 
+              class="form-control"
+              [disabled]="isLoading"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="rangeContactNo">Contact Number</label>
+            <input 
+              type="text" 
+              id="rangeContactNo" 
+              name="rangeContactNo" 
+              [(ngModel)]="currentRange.rangeContactNo" 
+              class="form-control"
+              [disabled]="isLoading"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="rangeMobileNo">Mobile Number</label>
+            <input 
+              type="text" 
+              id="rangeMobileNo" 
+              name="rangeMobileNo" 
+              [(ngModel)]="currentRange.rangeMobileNo" 
+              class="form-control"
+              [disabled]="isLoading"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="rangeDescription">Description</label>
+            <textarea 
+              id="rangeDescription" 
+              name="rangeDescription" 
+              [(ngModel)]="currentRange.rangeDescription" 
+              class="form-control" 
+              rows="3"
+              [disabled]="isLoading"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  name="rangeActive" 
+                  [(ngModel)]="currentRange.active"
+                  [disabled]="isLoading"
+                />
+                <span class="checkmark">Active</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="cancel-btn" (click)="closeModal()" [disabled]="isLoading">
+              Close
+            </button>
+            <button 
+              type="submit" 
+              class="save-btn" 
+              [disabled]="rangeForm.invalid || isLoading"
+            >
+              <span *ngIf="isLoading" class="spinner"></span>
+              {{ isEditMode ? 'Update' : 'Save' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

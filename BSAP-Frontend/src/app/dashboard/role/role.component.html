@@ -1,0 +1,169 @@
+<div class="data-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <div class="icon">📋</div>
+      <h1>List Of Roles</h1>
+    </div>
+  <button class="add-btn" (click)="showAddRoleModal()">Add Role</button>
+  </div>
+
+  <!-- Table Controls -->
+  <div class="table-controls">
+    <div class="show-entries">
+      <label for="entries">Show</label>
+      <select id="entries" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      <span>entries</span>
+    </div> 
+    
+    <div class="search-box">
+      <label for="search">Search:</label>
+      <input 
+        type="text" 
+        id="search"
+        [(ngModel)]="searchTerm" 
+        (input)="onSearch()" 
+        placeholder="Search roles..."
+      />
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th (click)="sortTable('id')" class="sortable">
+            Id
+            <span class="sort-icon" [class.active]="sortColumn === 'id'">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th (click)="sortTable('roleName')" class="sortable">
+            Role Name
+            <span class="sort-icon" [class.active]="sortColumn === 'roleName'">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th (click)="sortTable('active')" class="sortable">
+            Active
+            <span class="sort-icon" [class.active]="sortColumn === 'active'">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th>
+          <th>Edit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let role of paginatedRoles">
+          <td>{{ role.id }}</td>
+          <td>{{ role.roleName }}</td>
+          <td>
+            <span class="status-badge" [class.active]="role.active" [class.inactive]="!role.active">
+              {{ role.active ? 'YES' : 'NO' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="edit-btn" (click)="showEditRoleModal(role)">Edit</button>
+              <button class="permissions-btn" (click)="navigateToRolePermissions(role.id)">Permissions</button>
+              <button 
+                class="deactivate-btn" 
+                [class.activate]="!role.active"
+                *ngIf="role.active"
+                (click)="deactivateRole(role)"
+              >
+                Deactivate
+              </button>
+              <button 
+                class="activate-btn" 
+                *ngIf="!role.active"
+                (click)="activateRole(role)"
+              >
+                Activate
+              </button>
+              <!-- <button class="delete-btn" (click)="deleteRole(role)">Delete</button> -->
+</div>
+
+<!-- Add/Edit Role Modal -->
+<div class="modal-overlay" *ngIf="showRoleModal" (click)="closeRoleModal()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header p-2">
+        <h4 class="modal-title p-1">{{ isRoleEditMode ? 'Edit Role' : 'Add Role' }}</h4>
+        <button type="button" class="close-btn m-2" (click)="closeRoleModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body p-4">
+        <form (ngSubmit)="isRoleEditMode ? updateRole() : addRole()" #roleForm="ngForm">
+          <div class="form-group">
+            <label for="roleName">Role Name <span class="required">*</span></label>
+            <input type="text" id="roleName" name="roleName" class="form-control" [(ngModel)]="currentRole.roleName" required #roleNameInput="ngModel" placeholder="Enter role name">
+            <div class="error-message" *ngIf="roleNameInput.invalid && roleNameInput.touched">Role name is required</div>
+          </div>
+          <div class="form-group">
+            <label for="description">Description</label>
+            <input type="text" id="description" name="description" class="form-control" [(ngModel)]="currentRole.description" placeholder="Enter description">
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" name="active" [(ngModel)]="currentRole.active">
+              <span class="checkmark">Active</span>
+            </label>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="cancel-btn" (click)="closeRoleModal()">Close</button>
+            <button type="submit" class="save-btn" [disabled]="roleForm.invalid">{{ isRoleEditMode ? 'Update' : 'Save' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ getStartRecord() }} to {{ getEndRecord() }} of {{ totalRoles }} entries
+    </div>
+    
+    <div class="pagination">
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === 1" 
+        (click)="goToPage(currentPage - 1)"
+      >
+        Previous
+      </button>
+      
+      <button 
+        *ngFor="let page of getVisiblePages()" 
+        class="page-btn" 
+        [class.active]="page === currentPage"
+        (click)="goToPage(page)"
+      >
+        {{ page }}
+      </button>
+      
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === getTotalPages()" 
+        (click)="goToPage(currentPage + 1)"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+</div> 
