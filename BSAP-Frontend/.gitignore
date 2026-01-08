@@ -1,2 +1,12 @@
-node_modules
-.angular
+# Node dependencies
+node_modules/
+
+# Angular build & cache
+.angular/
+
+# Optional: log files (good to have)
+*.log
+
+# Optional: OS junk
+.DS_Store
+Thumbs.db
