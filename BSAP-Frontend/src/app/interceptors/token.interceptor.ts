@@ -1,5 +1,11 @@
-import { Injectable } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
+import { Injectable, Injector } from '@angular/core';
+import { 
+  HttpInterceptor, 
+  HttpRequest, 
+  HttpHandler, 
+  HttpEvent, 
+  HttpErrorResponse 
+} from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, filter, take, switchMap } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -8,67 +14,74 @@ import { AuthService } from '../services/auth.service';
 @Injectable()
 export class TokenInterceptor implements HttpInterceptor {
   private isRefreshing = false;
-  private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  private refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
 
   constructor(
-    private authService: AuthService,
+    private injector: Injector,  // Use Injector to avoid circular dependency
     private router: Router
   ) {}
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    // Add auth header with jwt if user is logged in and request is to the API
-    if (this.authService.isLoggedIn() && this.isApiUrl(request.url)) {
-      request = this.addTokenHeader(request);
+    // Lazily get AuthService to avoid circular dependency
+    const authService = this.injector.get(AuthService);
+    
+    // Check if this is an API request
+    if (this.isApiUrl(request.url)) {
+      const token = authService.getToken();
+      
+      if (token) {
+        request = this.addToken(request, token);
+      }
     }
 
     return next.handle(request).pipe(
       catchError(error => {
         if (error instanceof HttpErrorResponse && error.status === 401) {
-          return this.handle401Error(request, next);
+          return this.handle401Error(request, next, authService);
         }
         return throwError(() => error);
       })
     );
   }
 
-  private addTokenHeader(request: HttpRequest<any>): HttpRequest<any> {
-    const token = this.getToken();
-    if (token) {
-      return request.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-    }
-    return request;
+  private addToken(request: HttpRequest<any>, token: string): HttpRequest<any> {
+    return request.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`
+      }
+    });
   }
 
-  private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  private handle401Error(
+    request: HttpRequest<any>, 
+    next: HttpHandler, 
+    authService: AuthService
+  ): Observable<HttpEvent<any>> {
     if (!this.isRefreshing) {
       this.isRefreshing = true;
       this.refreshTokenSubject.next(null);
 
-      const refreshToken = this.getRefreshToken();
+      const refreshToken = authService.getRefreshToken();
       
       if (refreshToken) {
-        return this.authService.refreshToken().pipe(
+        return authService.refreshToken().pipe(
           switchMap((response: any) => {
             this.isRefreshing = false;
-            this.refreshTokenSubject.next(response.data.token);
+            const newToken = response.data.token;
+            this.refreshTokenSubject.next(newToken);
             
-            return next.handle(this.addTokenHeader(request));
+            // Retry the original request with new token
+            return next.handle(this.addToken(request, newToken));
           }),
           catchError((error) => {
             this.isRefreshing = false;
-            this.authService['clearAuthData']();
-            this.router.navigate(['/login']);
+            authService.logout();
             return throwError(() => error);
           })
         );
       } else {
         // No refresh token available, redirect to login
-        this.authService['clearAuthData']();
-        this.router.navigate(['/login']);
+        authService.logout();
         return throwError(() => new Error('Authentication required'));
       }
     }
@@ -76,20 +89,16 @@ export class TokenInterceptor implements HttpInterceptor {
     return this.refreshTokenSubject.pipe(
       filter(token => token !== null),
       take(1),
-      switchMap(() => next.handle(this.addTokenHeader(request)))
+      switchMap(token => {
+        return next.handle(this.addToken(request, token!));
+      })
     );
   }
 
   private isApiUrl(url: string): boolean {
     // Check if the request is to your API
-    return url.includes('/api/') || url.startsWith('http://localhost:3000/') || url.startsWith('https://your-api-domain.com/');
-  }
-
-  private getToken(): string | null {
-    return sessionStorage.getItem('token') || localStorage.getItem('token');
-  }
-
-  private getRefreshToken(): string | null {
-    return sessionStorage.getItem('refreshToken') || localStorage.getItem('refreshToken');
+    return url.includes('/api/') || 
+           url.includes('localhost:5050') || 
+           (url.startsWith('http') && url.includes('/api'));
   }
 }

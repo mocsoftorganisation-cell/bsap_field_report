@@ -5,11 +5,6 @@ import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
 
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
 export interface Role {
   id: number;
   roleName: string;
@@ -26,16 +21,23 @@ export interface User {
   lastName: string;
   email: string;
   mobileNo?: string;
+  contactNo?: string;
   roleId?: number;
   role: Role;
   stateId?: number;
   rangeId?: number;
-  isFirst?: boolean;
   battalion?: number;
   verified?: boolean;
   permissions?: string[];
   created_date?: string;
   updated_date?: string;
+  joining_date?: string;
+  isFirst?: boolean;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
 }
 
 export interface LoginResponse {
@@ -49,8 +51,6 @@ export interface LoginResponse {
   };
 }
 
-// User interface updated above
-
 export interface ApiResponse<T> {
   status: boolean;
   message: string;
@@ -63,34 +63,42 @@ export interface ApiResponse<T> {
 export class AuthService {
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
   private userSubject = new BehaviorSubject<User | null>(null);
-  
+
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
   public user$ = this.userSubject.asObservable();
-  
-  constructor(private http: HttpClient, private router: Router) { 
+
+  constructor(private http: HttpClient, private router: Router) {
     const token = this.getToken();
     if (token && !this.isTokenExpired(token)) {
       this.isAuthenticatedSubject.next(true);
-      this.loadUserProfile();
+      this.loadUserProfile().subscribe();
     } else {
       this.clearAuthData();
     }
   }
 
-  // Token management
-  private getToken(): string | null {
-    return localStorage.getItem('token');
+  /** ======================== PUBLIC METHODS ======================== */
+  public setUser(user: User): void {
+    this.userSubject.next(user);
   }
 
-  private getRefreshToken(): string | null {
-    return localStorage.getItem('refreshToken');
+  /** ================= TOKEN HANDLING ================= */
+  getToken(): string | null {
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
   }
 
   private setTokens(token: string, refreshToken?: string): void {
     localStorage.setItem('token', token);
-    if (refreshToken) {
-      localStorage.setItem('refreshToken', refreshToken);
-    }
+    if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+  }
+
+  logout(): void {
+    this.clearAuthData();
+    this.router.navigate(['/login']);
   }
 
   private clearAuthData(): void {
@@ -100,6 +108,10 @@ export class AuthService {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('firstName');
+    localStorage.removeItem('lastName');
+    localStorage.removeItem('roleName');
+    localStorage.removeItem('contactNo');
     this.isAuthenticatedSubject.next(false);
     this.userSubject.next(null);
   }
@@ -107,9 +119,8 @@ export class AuthService {
   private isTokenExpired(token: string): boolean {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      const currentTime = Date.now() / 1000;
-      return payload.exp < currentTime;
-    } catch (error) {
+      return payload.exp < Date.now() / 1000;
+    } catch {
       return true;
     }
   }
@@ -117,17 +128,8 @@ export class AuthService {
   private getHeaders(contentType?: string): HttpHeaders {
     const token = this.getToken();
     let headers = new HttpHeaders();
-    
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-    
-    if (contentType) {
-      headers = headers.set('Content-Type', contentType);
-    } else {
-      headers = headers.set('Content-Type', 'application/json');
-    }
-    
+    if (token) headers = headers.set('Authorization', `Bearer ${token}`);
+    headers = headers.set('Content-Type', contentType || 'application/json');
     return headers;
   }
 
@@ -144,172 +146,208 @@ export class AuthService {
       errorMessage = error.message;
     }
 
-    // Handle authentication errors
-    if (error.status === 401) {
-      this.clearAuthData();
-      this.router.navigate(['/login']);
-    }
+    console.log('Error details:', {
+      status: error.status,
+      url: error.url,
+      message: errorMessage
+    });
 
+    // Don't logout for password change errors (401)
+    const isPasswordChangeError = error.url?.includes('change-password');
+    
+    if (error.status === 401 && !isPasswordChangeError) {
+      console.log('Session expired, logging out...');
+      this.logout();
+    }
+    
     return throwError(() => new Error(errorMessage));
   }
 
-  // Authentication methods
+  /** ================= AUTHENTICATION ================= */
   login(loginData: LoginRequest, remember: boolean = false): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(
-      `${environment.apiUrl}auth/login`,
-      loginData,
-      { headers: this.getHeaders() }
-    ).pipe(
-      tap(response => {
-  if ((response.status === 'SUCCESS' || response.status === 'true') && response.data.token) {
-          this.setTokens(response.data.token, response.data.refreshToken);
-          this.userSubject.next(response.data.user);
-          this.isAuthenticatedSubject.next(true);
-          localStorage.setItem('isLoggedIn', 'true');
-          localStorage.setItem('userEmail', response.data.user.email);
-          // Store additional user info in localStorage
-          localStorage.setItem('lastName', response.data.user.lastName || '');
-          localStorage.setItem('firstName', response.data.user.firstName || '');
-          localStorage.setItem('roleName', response.data.user.role?.roleName || '');
-          localStorage.setItem('email', response.data.user.email || '');
+    return this.http
+      .post<LoginResponse>(`${environment.apiUrl}auth/login`, loginData, { headers: this.getHeaders() })
+      .pipe(
+        tap(response => {
+          if ((response.status === 'SUCCESS' || response.status === 'true') && response.data.token) {
+            this.setTokens(response.data.token, response.data.refreshToken);
+            this.setUser(response.data.user);
+            this.isAuthenticatedSubject.next(true);
 
-          const userRole = response.data.user.role;
-        const roleId = userRole?.id || response.data.user.roleId;
-
-
-         console.log('Role info from API:', {
-          roleObject: userRole,
-          roleId: roleId,
-          roleName: userRole?.roleName
-        });
-
-
-        if (userRole) {
-          // If we have role object
-          localStorage.setItem('roleId', userRole.id.toString());
-          localStorage.setItem('roleName', userRole.roleName);
-        } else if (roleId) {
-          // If we only have roleId
-          localStorage.setItem('roleId', roleId.toString());
-          localStorage.setItem('roleName', ''); // Clear or set default
-        }
-        }
-      }),
-      catchError(this.handleError.bind(this))
-    );
-  }
-
-  // Legacy login method for backward compatibility
-  async loginLegacy(email: string, password: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.login({ email, password }).subscribe({
-        next: (response) => {
-          if (response.status) {
-            resolve();
-          } else {
-            reject(new Error(response.message || 'Login failed'));
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userEmail', response.data.user.email);
+            localStorage.setItem('firstName', response.data.user.firstName || '');
+            localStorage.setItem('lastName', response.data.user.lastName || '');
+            localStorage.setItem('roleName', response.data.user.role?.roleName || '');
+            if (response.data.user.contactNo) {
+              localStorage.setItem('contactNo', response.data.user.contactNo);
+            }
           }
-        },
-        error: (error) => {
-          reject(error);
-        }
-      });
-    });
+        }),
+        catchError(this.handleError.bind(this))
+      );
   }
-
-  // logout(): Observable<any> {
-  //   const token = this.getToken();
-  //   if (token) {
-  //     return this.http.post(
-  //       `${environment.apiUrl}auth/logout`,
-  //       {},
-  //       { headers: this.getHeaders() }
-  //     ).pipe(
-  //       tap(() => this.clearAuthData()),
-  //       catchError((error) => {
-  //         this.clearAuthData();
-  //         return throwError(() => error);
-  //       })
-  //     );
-  //   } else {
-  //     this.clearAuthData();
-  //     return new Observable(observer => {
-  //       observer.next({});
-  //       observer.complete();
-  //     });
-  //   }
-  // }
 
   refreshToken(): Observable<LoginResponse> {
     const refreshToken = this.getRefreshToken();
-    if (!refreshToken) {
-      this.clearAuthData();
-      return throwError(() => new Error('No refresh token available'));
-    }
+    if (!refreshToken) return throwError(() => new Error('No refresh token available'));
 
-    return this.http.post<LoginResponse>(
-      `${environment.apiUrl}auth/refresh`,
-      { refreshToken },
-      { headers: this.getHeaders() }
-    ).pipe(
+    return this.http.post<LoginResponse>(`${environment.apiUrl}auth/refresh`, { refreshToken }, { headers: this.getHeaders() }).pipe(
       tap(response => {
         if (response.status && response.data.token) {
           this.setTokens(response.data.token, response.data.refreshToken);
-          this.userSubject.next(response.data.user);
+          this.setUser(response.data.user);
           this.isAuthenticatedSubject.next(true);
         }
       }),
       catchError(error => {
-        this.clearAuthData();
+        this.logout();
         return this.handleError(error);
       })
     );
   }
 
-  // User profile methods
+  /** ================= USER PROFILE ================= */
   loadUserProfile(): Observable<User> {
-    return this.http.get<ApiResponse<User>>(
-      `${environment.apiUrl}auth/profile`,
-      { headers: this.getHeaders() }
-    ).pipe(
-      map(response => response.data),
+    return this.http.get<ApiResponse<User>>(`${environment.apiUrl}auth/profile`, { headers: this.getHeaders() }).pipe(
+      map(res => {
+        console.log('Profile loaded from API:', res.data);
+        return res.data;
+      }),
       tap(user => {
-        this.userSubject.next(user);
-        localStorage.setItem('userEmail', user.email);
+        this.setUser(user);
+        // Update localStorage with contactNo
+        if (user.contactNo) {
+          localStorage.setItem('contactNo', user.contactNo);
+        }
       }),
       catchError(this.handleError.bind(this))
     );
   }
 
-  profile(): Observable<User> {
-    return this.loadUserProfile();
-  }
-
+  /** ================= UPDATE PROFILE ================= */
   updateProfile(profileData: Partial<User>): Observable<User> {
-    return this.http.put<ApiResponse<User>>(
-      `${environment.apiUrl}auth/profile`,
-      profileData,
-      { headers: this.getHeaders() }
-    ).pipe(
-      map(response => response.data),
-      tap(user => this.userSubject.next(user)),
-      catchError(this.handleError.bind(this))
+    const currentUser = this.getCurrentUser();
+    if (!currentUser) {
+      console.error('No user logged in');
+      return throwError(() => new Error('No user logged in'));
+    }
+
+    console.log('=== UPDATE PROFILE REQUEST ===');
+    console.log('User ID:', currentUser.id);
+    console.log('Profile Data Received:', profileData);
+    console.log('ContactNo in profileData:', profileData.contactNo);
+
+    // IMPORTANT: Remove mobileNo if it exists (we don't want to update mobileNo)
+    const { mobileNo, ...dataWithoutMobile } = profileData;
+    
+    // Create payload with userId - ONLY send contactNo, not mobileNo
+    const payload = { 
+      userId: currentUser.id, 
+      ...dataWithoutMobile 
+    };
+
+    console.log('Payload being sent (mobileNo removed):', payload);
+
+    const apiEndpoint = `${environment.apiUrl}users/profile`;
+    console.log('Using endpoint:', apiEndpoint);
+
+    return this.http.put<any>(apiEndpoint, payload, { headers: this.getHeaders() }).pipe(
+      map((response: any) => {
+        console.log('Raw backend response:', response);
+        
+        // Handle backend response format
+        if (response.success !== undefined) {
+          if (!response.success) {
+            throw new Error(response.message || 'Update failed');
+          }
+          return response.user;
+        }
+        else if (response.status !== undefined) {
+          if (!response.status) {
+            throw new Error(response.message || 'Update failed');
+          }
+          return response.data;
+        }
+        else {
+          return response;
+        }
+      }),
+      tap((user: User) => {
+        console.log('✅ Profile updated successfully:', user);
+        console.log('Updated contactNo:', user.contactNo);
+        
+        this.setUser(user);
+        
+        // Update localStorage
+        localStorage.setItem('firstName', user.firstName);
+        localStorage.setItem('lastName', user.lastName || '');
+        localStorage.setItem('userEmail', user.email);
+        localStorage.setItem('roleName', user.role?.roleName || '');
+        if (user.contactNo) {
+          localStorage.setItem('contactNo', user.contactNo);
+        }
+      }),
+      catchError(error => {
+        console.error('❌ Update profile error:', error);
+        return this.handleError(error);
+      })
     );
   }
 
-  changePassword(oldPassword: string, newPassword: string): Observable<any> {
-    return this.http.post(
-      `${environment.apiUrl}auth/change-password`,
-      { oldPassword, newPassword },
-      { headers: this.getHeaders() }
-    ).pipe(
-      catchError(this.handleError.bind(this))
+  changePassword(currentPassword: string, newPassword: string): Observable<any> {
+    console.log('🔑 Sending password change request:', {
+      hasCurrentPassword: !!currentPassword,
+      hasNewPassword: !!newPassword
+    });
+    
+    const payload = { 
+      currentPassword, 
+      newPassword 
+    };
+    
+    console.log('Payload:', payload);
+
+    return this.http.post(`${environment.apiUrl}auth/change-password`, payload, { 
+      headers: this.getHeaders() 
+    }).pipe(
+      map((response: any) => {
+        console.log('✅ Password change response:', response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('❌ Password change error:', error);
+        
+        // Handle password change errors specifically
+        if (error.status === 401) {
+          // Password is incorrect - don't logout, just show error
+          const errorMsg = error.error?.message || 'Current password is incorrect';
+          return throwError(() => new Error(errorMsg));
+        }
+        
+        if (error.status === 400) {
+          const errorMsg = error.error?.message || 'Invalid password data';
+          return throwError(() => new Error(errorMsg));
+        }
+        
+        return this.handleError(error);
+      })
     );
   }
 
-  // Utility methods
+  /** ================= UTILITIES ================= */
   isLoggedIn(): boolean {
-    return this.isAuthenticatedSubject.value;
+    const token = this.getToken();
+    if (!token) return false;
+    
+    // Check if token is expired
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const isExpired = payload.exp < Date.now() / 1000;
+      return !isExpired;
+    } catch {
+      return false;
+    }
   }
 
   getCurrentUser(): User | null {
@@ -322,48 +360,30 @@ export class AuthService {
   }
 
   hasPermission(permission: string): boolean {
-    const user = this.getCurrentUser();
-    return user?.permissions?.includes(permission) || false;
+    return this.getCurrentUser()?.permissions?.includes(permission) || false;
   }
 
   hasRole(role: string): boolean {
-    const user = this.getCurrentUser();
-  return user?.role?.roleName === role;
-  }
-
-  // Legacy method for backward compatibility
-  logins(data: any): Observable<any> {
-    return this.login(data);
+    return this.getCurrentUser()?.role?.roleName === role;
   }
 
   getUserRoleName(): string | null {
-  // First try to get from current user object
-  const currentUser = this.getCurrentUser();
-  if (currentUser?.role?.roleName) {
-    return currentUser.role.roleName;
+    return this.getCurrentUser()?.role?.roleName || localStorage.getItem('roleName');
   }
-  
-  // Fall back to localStorage
-  return localStorage.getItem('roleName');
-}
 
-getUserRoleId(): number | null {
-  // First try to get from current user object
-  const currentUser = this.getCurrentUser();
-  const roleId = currentUser?.role?.id || currentUser?.roleId;
-  if (roleId !== undefined && roleId !== null) {
-    return roleId;
+  getUserRoleId(): number | null {
+    const currentUser = this.getCurrentUser();
+    const roleId = currentUser?.role?.id || currentUser?.roleId;
+    if (roleId !== undefined && roleId !== null) return roleId;
+    const storedRoleId = localStorage.getItem('roleId');
+    return storedRoleId ? parseInt(storedRoleId) : null;
   }
-  
-  // Fall back to localStorage
-  const storedRoleId = localStorage.getItem('roleId');
-  return storedRoleId ? parseInt(storedRoleId) : null;
-}
-// hasRole(roleName: string): boolean {
-//   return this.getUserRoleName() === roleName;
-// }
 
-hasRoleId(roleId: number): boolean {
-  return this.getUserRoleId() === roleId;
-}
+  hasRoleId(roleId: number): boolean {
+    return this.getUserRoleId() === roleId;
+  }
+
+  logins(data: any): Observable<any> {
+    return this.login(data);
+  }
 }
