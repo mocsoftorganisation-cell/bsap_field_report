@@ -1,45 +1,143 @@
 <div class="profile-container">
+  <!-- Success Message (Top Sticky) -->
+  <div *ngIf="saveSuccess" class="success-message">
+    ✅ Profile updated successfully!
+    <button class="close-btn" (click)="saveSuccess = false">&times;</button>
+  </div>
+
+  <!-- Password Change Success -->
+  <div *ngIf="passwordChangeSuccess" class="success-message password-success">
+    ✅ Password changed successfully!
+    <button class="close-btn" (click)="passwordChangeSuccess = false">&times;</button>
+  </div>
+
+  <!-- Loading Overlay (Fixed Full Screen) -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <div class="loading-text">Saving your changes...</div>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+      <p class="loading-subtext">Please wait while we update your profile</p>
+    </div>
+  </div>
+
   <div class="page-header">
     <h1>Profile</h1>
-    <!-- <p>Manage your Profile.</p> -->
+    <p>Manage your personal information and security</p>
   </div>
-  
+
   <div class="profile-content">
     <div class="profile-card">
+      <!-- Avatar Section -->
       <div class="profile-avatar">
         <div class="avatar-placeholder">
           {{ getUserInitial() }}
         </div>
-        <!-- <button class="change-avatar-btn">Change Photo</button> -->
       </div>
-      
-      <div class="profile-form">
+
+      <!-- Profile Form -->
+      <form class="profile-form" #profileForm="ngForm">
+        <!-- Personal Information Section -->
+        <div class="section-header">
+          <h2>Personal Information</h2>
+        </div>
+
         <div class="form-row">
+          <!-- First Name -->
           <div class="form-group">
-            <label for="name">Full Name</label>
+            <label for="firstName">First Name </label>
             <input
               type="text"
-              id="name"
-              [value]="getUserDisplayName()"
-              name="name"
-              placeholder="Enter your full name"
+              id="firstName"
+              [(ngModel)]="user.firstName"
+              name="firstName"
+              placeholder="Enter your first name"
+              required
+              [attr.disabled]="isLoading ? true : null"
             />
+            <div *ngIf="!user.firstName && isFormSubmitted" class="error-text">
+              First name is required
+            </div>
           </div>
-          
+
+          <!-- Last Name -->
           <div class="form-group">
-            <label for="email">Email Address</label>
+            <label for="lastName">Last Name</label>
             <input
-              type="email"
-              id="email"
-              [value]="getUserEmail()"
-              name="email"
-              placeholder="Enter your email"
+              type="text"
+              id="lastName"
+              [(ngModel)]="user.lastName"
+              name="lastName"
+              placeholder="Enter your last name"
+              [attr.disabled]="isLoading ? true : null"
             />
           </div>
         </div>
-        
+
         <div class="form-row">
+          <!-- Email -->
           <div class="form-group">
+            <label for="email">Email Address </label>
+            <input
+              type="email"
+              id="email"
+              [(ngModel)]="user.email"
+              name="email"
+              placeholder="Enter your email"
+              required
+              [attr.disabled]="isLoading ? true : null"
+            />
+            <div *ngIf="!user.email && isFormSubmitted" class="error-text">
+              Email is required
+            </div>
+          </div>
+
+          <!-- Contact Number (FIXED: Now uses contactNo) -->
+          <div class="form-group">
+            <label for="contactNo">Contact Number </label>
+            <input
+              type="tel"
+              id="contactNo"
+              [(ngModel)]="user.contactNo"
+              name="contactNo"
+              placeholder="Enter 10-digit contact number"
+              pattern="[0-9]{10}"
+              maxlength="10"
+              required
+              [attr.disabled]="isLoading ? true : null"
+              (keypress)="validateNumber($event)"
+              (input)="formatContactNumber($event)"
+            />
+            <div class="input-hint">10-digit number for contact purposes</div>
+            <div *ngIf="user.contactNo && user.contactNo.length !== 10 && isFormSubmitted" class="error-text">
+              Contact number must be 10 digits
+            </div>
+          </div>
+        </div>
+
+      
+        <div class="section-header">
+          <h2>Account Information</h2>
+        </div>
+
+        <div class="form-row">
+          <!-- Mobile Number (Readonly - System managed) -->
+          <div class="form-group">
+            <label for="mobileNo">Mobile Number</label>
+            <input
+              type="text"
+              id="mobileNo"
+              [value]="user.mobileNo || 'Not set'"
+              readonly
+              class="readonly"
+            />
+            <div class="input-hint">System-managed for authentication</div>
+          </div>
+
+          <!-- Role (readonly) -->
+          <!-- <div class="form-group">
             <label for="role">Role</label>
             <input
               type="text"
@@ -48,32 +146,117 @@
               readonly
               class="readonly"
             />
-          </div>
-          
-          <div class="form-group">
-            <label for="joinDate">Member Since</label>
+          </div> -->
+        </div>
+
+        <div class="form-row">
+          <!-- Joining Date (readonly) -->
+          <!-- <div class="form-group">
+            <label for="joiningDate">Joining Date</label>
             <input
               type="text"
-              id="joinDate"
-              [value]="getUserJoinDate()"
+              id="joiningDate"
+              [value]="getJoiningDate()"
+              readonly
+              class="readonly"
+            />
+          </div> -->
+
+          <!-- Member Since (readonly) -->
+          <div class="form-group">
+            <label for="memberSince">Member Since</label>
+            <input
+              type="text"
+              id="memberSince"
+              [value]="getMemberSince()"
               readonly
               class="readonly"
             />
           </div>
         </div>
-        
+
+        <!-- Password Change Section -->
+        <div class="section-header">
+          <h2>Change Password</h2>
+          <p class="section-subtitle">Enter both fields to change password</p>
+        </div>
+
+        <div class="form-row">
+          <!-- Current Password -->
+          <div class="form-group">
+            <label for="currentPassword">Current Password</label>
+            <input
+              type="password"
+              id="currentPassword"
+              [(ngModel)]="currentPassword"
+              name="currentPassword"
+              placeholder="Enter current password"
+              [attr.disabled]="isLoading ? true : null"
+            />
+            <div *ngIf="!currentPassword && newPassword && isFormSubmitted" class="error-text">
+              Current password is required
+            </div>
+          </div>
+
+          <!-- New Password -->
+          <div class="form-group">
+            <label for="newPassword">New Password</label>
+            <input
+              type="password"
+              id="newPassword"
+              [(ngModel)]="newPassword"
+              name="newPassword"
+              placeholder="Enter new password"
+              [attr.disabled]="isLoading ? true : null"
+            />
+            <div class="password-requirements">
+              <small>Minimum 8 characters with letters and numbers</small>
+            </div>
+            <div *ngIf="newPassword && newPassword.length < 8 && isFormSubmitted" class="error-text">
+              Password must be at least 8 characters
+            </div>
+          </div>
+        </div>
+
+        <!-- Information Note -->
+        <div class="info-note">
+          <p>
+            <strong>Note:</strong> Your mobile number (<strong>{{user.mobileNo || 'Not set'}}</strong>) 
+            is used for system authentication and cannot be changed here. 
+            Contact your administrator for mobile number updates.
+          </p>
+        </div>
+
+        <!-- Action Buttons -->
         <div class="form-actions">
-          <button class="save-btn" type="button" (click)="goback()">
+          <button 
+            class="cancel-btn" 
+            type="button" 
+            (click)="goback()"
+            [disabled]="isLoading"
+          >
             Back to Dashboard
           </button>
-          <!-- <button class="cancel-btn" type="button">
-            Cancel
+
+          <button 
+            class="save-btn" 
+            type="button" 
+            (click)="onSave()"
+            [disabled]="isLoading || !isFormValid()"
+          >
+            <span *ngIf="!isLoading">Save Changes</span>
+            <span *ngIf="isLoading" class="btn-loading">
+              <span class="mini-spinner"></span> Saving...
+            </span>
           </button>
-          <button class="save-btn" (click)="onSave()">
-            Save Changes
-          </button> -->
         </div>
-      </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
+          <button class="close-btn" (click)="errorMessage = ''">&times;</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

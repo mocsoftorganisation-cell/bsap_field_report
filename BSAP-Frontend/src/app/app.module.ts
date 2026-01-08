@@ -25,16 +25,16 @@ import { ApiService } from './services/api.service';
         AuthService,
         ApiService,
         NotificationService,
-        {
-            provide: HTTP_INTERCEPTORS,
-            useClass: TokenInterceptor,
-            multi: true
-        },
-        {
-            provide: HTTP_INTERCEPTORS,
-            useClass: ErrorInterceptor,
-            multi: true
-        },
+        // {
+        //     provide: HTTP_INTERCEPTORS,
+        //     useClass: TokenInterceptor,
+        //     multi: true
+        // },
+        // {
+        //     provide: HTTP_INTERCEPTORS,
+        //     useClass: ErrorInterceptor,
+        //     multi: true
+        // },
         provideHttpClient(withInterceptorsFromDi())
     ] })
 export class AppModule { }

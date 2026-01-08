@@ -1,9 +1,9 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5000/api/', // local development API
+  apiUrl: 'http://localhost:5050/api/', // local development API
                        //           apiUrl: 'http://164.52.217.93:9071/api/', // staging API
-  wsUrl: 'http://localhost:5000',
+  wsUrl: 'http://localhost:5050',
   // API Endpoints
   endpoints: {
     // Authentication

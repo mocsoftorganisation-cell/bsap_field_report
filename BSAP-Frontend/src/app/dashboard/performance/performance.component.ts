@@ -926,15 +926,12 @@ if (this.currentTopic?.id === this.strengthTopicId) {
     if (topic.topicSubName == "Budget Management") return "Budget Items";
     if (topic.topicSubName == "Surprise inspection of posts/guards/pickets")
       return "Inspected";
-    if (topic.topicSubName == "Scheduled Annual Inspection")
-      return "Inspected";
     if (topic.topicSubName == "No. of sessions") return "Training Session";
     if (topic.topicSubName == "Tradesmen, Ministerial, Supporting Staff")
       return "Rank";
 
     if (topic.topicSubName == "Earnings from monetized assets")
       return "Amenities";
-    if (topic.topicSubName == "Company's Deployment") return "Company";
 
     return "DETAILS";
   }
