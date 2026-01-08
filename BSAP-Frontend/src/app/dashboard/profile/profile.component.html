@@ -1,0 +1,79 @@
+<div class="profile-container">
+  <div class="page-header">
+    <h1>Profile</h1>
+    <!-- <p>Manage your Profile.</p> -->
+  </div>
+  
+  <div class="profile-content">
+    <div class="profile-card">
+      <div class="profile-avatar">
+        <div class="avatar-placeholder">
+          {{ getUserInitial() }}
+        </div>
+        <!-- <button class="change-avatar-btn">Change Photo</button> -->
+      </div>
+      
+      <div class="profile-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input
+              type="text"
+              id="name"
+              [value]="getUserDisplayName()"
+              name="name"
+              placeholder="Enter your full name"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              [value]="getUserEmail()"
+              name="email"
+              placeholder="Enter your email"
+            />
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="role">Role</label>
+            <input
+              type="text"
+              id="role"
+              [value]="getUserRole()"
+              readonly
+              class="readonly"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="joinDate">Member Since</label>
+            <input
+              type="text"
+              id="joinDate"
+              [value]="getUserJoinDate()"
+              readonly
+              class="readonly"
+            />
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button class="save-btn" type="button" (click)="goback()">
+            Back to Dashboard
+          </button>
+          <!-- <button class="cancel-btn" type="button">
+            Cancel
+          </button>
+          <button class="save-btn" (click)="onSave()">
+            Save Changes
+          </button> -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

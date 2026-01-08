@@ -1,0 +1,85 @@
+/* Quick Fix CSS for Existing Components
+   Import this file in components that need immediate responsive fixes */
+
+/* Essential responsive table fixes */
+.table-panel {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-table,
+.table {
+  min-width: 800px !important;
+}
+
+/* Essential modal header consistency */
+.modal-header:not(.modal-header-consistent) {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+  color: white !important;
+  border-bottom: none !important;
+}
+
+.modal-header:not(.modal-header-consistent) h2,
+.modal-header:not(.modal-header-consistent) .modal-title {
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+}
+
+.modal-header:not(.modal-header-consistent) .close-btn,
+.modal-header:not(.modal-header-consistent) .btn-close {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border-radius: 50% !important;
+  width: 36px !important;
+  height: 36px !important;
+}
+
+/* Mobile responsive fixes */
+@media (max-width: 768px) {
+  .data-table,
+  .table {
+    min-width: 600px !important;
+    font-size: 12px !important;
+  }
+
+  .data-table th,
+  .data-table td,
+  .table th,
+  .table td {
+    padding: 8px 4px !important;
+  }
+
+  .action-buttons {
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+
+  .modal-content {
+    width: 95% !important;
+    max-width: 95vw !important;
+    margin: 10px !important;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse !important;
+  }
+
+  .modal-footer button {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .data-table,
+  .table {
+    min-width: 500px !important;
+    font-size: 11px !important;
+  }
+
+  .data-table th,
+  .data-table td,
+  .table th,
+  .table td {
+    padding: 6px 2px !important;
+  }
+}

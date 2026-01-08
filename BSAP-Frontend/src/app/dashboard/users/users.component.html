@@ -1,0 +1,402 @@
+<div class="data-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <div class="icon">👥</div>
+      <h1>List Of Users</h1>
+    </div>
+    <button class="add-btn" (click)="showAddUserModal()">Add User</button>
+  </div>
+
+  <!-- Table Controls -->
+  <div class="table-controls">
+    <div class="show-entries">
+      <label for="entries">Show</label>
+      <select id="entries" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      <span>entries</span>
+    </div>
+    
+    <div class="search-box">
+      <label for="search">Search:</label>
+      <input 
+        type="text" 
+        id="search"
+        [(ngModel)]="searchTerm" 
+        (input)="onSearch()" 
+        placeholder="Search users..."
+      />
+      <button (click)="clearSearch()" class="clear-search-btn p-2 rounded">Clear</button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading users...</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading" class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <!-- <th (click)="sortTable('id')" class="sortable">
+            Id
+            <span class="sort-icon" [class.active]="sortColumn === 'id'">
+              {{ sortDirection === 'asc' ? '↑' : '↓' }}
+            </span>
+          </th> -->
+          <th (click)="sortTable('name')" class="sortable">
+            Name
+            <span class="sort-icon" [class.active]="sortColumn === 'name'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('email')" class="sortable">
+            Email
+            <span class="sort-icon" [class.active]="sortColumn === 'email'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('role')" class="sortable">
+            Role
+            <span class="sort-icon" [class.active]="sortColumn === 'role'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th (click)="sortTable('phone')" class="sortable">
+            Phone
+            <span class="sort-icon" [class.active]="sortColumn === 'phone'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th>State</th>
+          <th>Zone</th>
+          <th>Battalion</th>
+          <th (click)="sortTable('active')" class="sortable">
+            Active
+            <span class="sort-icon" [class.active]="sortColumn === 'active'">
+              <!-- {{ sortDirection === 'asc' ? '↑' : '↓' }} -->
+            </span>
+          </th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of paginatedUsers; trackBy: trackByUserId">
+          <!-- <td>{{ user.id }}</td> -->
+          <td>{{ getFullName(user) }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            <span class="role-badge">{{ getRoleName(user.roleId) }}</span>
+          </td>
+          <td>{{ user.mobileNo }}</td>
+          <td>{{ getStateName(user.stateId) }}</td>
+          <td>{{ getRangeName(user.rangeId) }}</td>
+          <td>{{ user.battalion?.battalionName || getBattalionName(user.battalionId) }}</td>
+          <td>
+            <span class="status-badge" [class.active]="user.active" [class.inactive]="!user.active">
+              {{ user.active ? 'YES' : 'NO' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="edit-btn" (click)="editUser(user)">Edit</button>
+              <button 
+                class="deactivate-btn" 
+                [class.activate]="!user.active"
+                (click)="toggleUserStatus(user)"
+              >
+                {{ user.active ? 'Deactivate' : 'Activate' }}
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="paginatedUsers.length === 0">
+          <td colspan="10" class="no-data">No users found</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!isLoading && users.length > 0" class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ showingStart }} to {{ showingEnd }} of {{ totalItems }} entries
+    </div>
+    
+    <div class="pagination">
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === 1" 
+        (click)="previousPage()"
+      >
+        Previous
+      </button>
+      
+      <button 
+        *ngFor="let page of getVisiblePages()" 
+        class="page-btn" 
+        [class.active]="page === currentPage"
+        (click)="goToPage(page)"
+        [class.ellipsis]="page === -1"
+      >
+        {{ page === -1 ? '...' : page }}
+      </button>
+      
+      <button 
+        class="page-btn" 
+        [disabled]="currentPage === totalPages" 
+        (click)="nextPage()"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">{{ isEditMode ? 'Edit User' : 'Add User' }}</h4>
+        <button type="button" class="close-btn" (click)="closeModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <form (ngSubmit)="isEditMode ? updateUser() : addUser()" #userForm="ngForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="firstName" class="required">First Name</label>
+              <input 
+                type="text" 
+                id="firstName" 
+                name="firstName" 
+                [(ngModel)]="currentUser.firstName" 
+                #firstName="ngModel"
+                required 
+                pattern="^[A-Za-z\s]+$"
+                class="form-control"
+                [class.error]="firstName.touched && (firstName.errors?.['required'] || firstName.errors?.['pattern'])"
+              />
+              <div class="error-message" *ngIf="firstName.touched && firstName.errors?.['required']">
+                First name is required
+              </div>
+              <div class="error-message" *ngIf="firstName.touched && firstName.errors?.['pattern']">
+                First name must contain only letters and spaces
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="lastName" class="required">Last Name</label>
+              <input 
+                type="text" 
+                id="lastName" 
+                name="lastName" 
+                [(ngModel)]="currentUser.lastName" 
+                #lastName="ngModel"
+                required 
+                pattern="^[A-Za-z\s]+$"
+                class="form-control"
+                [class.error]="lastName.touched && (lastName.errors?.['required'] || lastName.errors?.['pattern'])"
+              />
+              <div class="error-message" *ngIf="lastName.touched && lastName.errors?.['required']">
+                Last name is required
+              </div>
+              <div class="error-message" *ngIf="lastName.touched && lastName.errors?.['pattern']">
+                Last name must contain only letters and spaces
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="userEmail" class="required">Email</label>
+            <input 
+              type="email" 
+              id="userEmail" 
+              name="userEmail" 
+              [(ngModel)]="currentUser.email" 
+              #userEmail="ngModel"
+              required 
+              email
+              class="form-control"
+              [class.error]="userEmail.touched && (userEmail.errors?.['required'] || userEmail.errors?.['email'])"
+            />
+            <div class="error-message" *ngIf="userEmail.touched && userEmail.errors?.['required']">
+              Email is required
+            </div>
+            <div class="error-message" *ngIf="userEmail.touched && userEmail.errors?.['email']">
+              Please enter a valid email address
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="mobileNo" class="required">Mobile Number</label>
+            <input 
+              type="tel" 
+              id="mobileNo" 
+              name="mobileNo" 
+              [(ngModel)]="currentUser.mobileNo" 
+              #mobileNo="ngModel"
+              required 
+              pattern="[0-9]{10}"
+              maxlength="10"
+              class="form-control"
+              [class.error]="mobileNo.touched && (mobileNo.errors?.['required'] || mobileNo.errors?.['pattern'])"
+            />
+            <div class="error-message" *ngIf="mobileNo.touched && mobileNo.errors?.['required']">
+              Mobile number is required
+            </div>
+            <div class="error-message" *ngIf="mobileNo.touched && mobileNo.errors?.['pattern']">
+              Mobile number must be 10 digits
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="contactNo">Contact Number</label>
+            <input 
+              type="tel" 
+              id="contactNo" 
+              name="contactNo" 
+              [(ngModel)]="currentUser.contactNo" 
+              pattern="[0-9]{7,13}"
+              class="form-control"
+            />
+            <div class="error-message" *ngIf="currentUser.contactNo && !currentUser.contactNo.match('^[0-9]{7,13}$')">
+              Contact number must be 7 to 13 digits
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="userRole" class="required">Role</label>
+            <select 
+              id="userRole" 
+              name="userRole" 
+              [(ngModel)]="currentUser.roleId" 
+              #userRole="ngModel"
+              required 
+              class="form-control"
+              [class.error]="userRole.touched && userRole.errors?.['required']"
+            >
+              <option value="">Select Role</option>
+              <option *ngFor="let role of roles" [value]="role.id">{{ role.roleName }}</option>
+            </select>
+            <div class="error-message" *ngIf="userRole.touched && userRole.errors?.['required']">
+              Role is required
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="state">State</label>
+              <select 
+                id="state" 
+                name="state" 
+                [(ngModel)]="currentUser.stateId" 
+                class="form-control"
+                (change)="onStateChange(currentUser.stateId)"
+              >
+                <option value="">Select State</option>
+                <option *ngFor="let state of states" [value]="state.id">{{ state.stateName }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="range">Range</label>
+              <select 
+                id="range" 
+                name="range" 
+                [(ngModel)]="currentUser.rangeId" 
+                (change)="onRangeChange(currentUser.rangeId ?? 0)"
+                class="form-control"
+              >
+                <option value="">Select Range</option>
+                <option *ngFor="let range of ranges" [value]="range.id">{{ range.rangeName }}</option>
+              </select>
+            </div>
+          </div>
+
+        
+          <div class="form-group">
+            <label for="password" class="required">Password</label>
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              [(ngModel)]="currentUser.password" 
+              #password="ngModel"
+              [required]="!isEditMode"
+              pattern="(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*"
+              class="form-control"
+              [class.error]="password.touched && (password.errors?.['required'] || password.errors?.['pattern'])"
+            />
+            <div class="error-message" *ngIf="password.touched && password.errors?.['required']">
+              Password is required
+            </div>
+            <div class="error-message" *ngIf="password.touched && password.errors?.['pattern']">
+              Password must be min 8 chars, include uppercase, lowercase and a digit
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="joiningDate" class="required">Joining Date</label>
+            <input type="date" id="joiningDate" name="joiningDate" [(ngModel)]="currentUser.joiningDate" required class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="endDate">End Date</label>
+            <input type="date" id="endDate" name="endDate" [(ngModel)]="currentUser.endDate" disabled class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="userImage">User Image</label>
+            <input type="file" id="userImage" name="userImage" accept="image/png, image/jpeg, image/jpg" (change)="onFileSelect($event)" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="battalion">Battalion</label>
+            <select id="battalion" name="battalion" [(ngModel)]="currentUser.battalionId" class="form-control">
+              <option value="">Select Battalion</option>
+              <option *ngFor="let b of battalions" [value]="b.id">{{ b.battalionName }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  name="userActive" 
+                  [(ngModel)]="currentUser.active"
+                />
+                <span class="checkmark">Active</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="cancel-btn" (click)="closeModal()">
+              Close
+            </button>
+            <button 
+              type="submit" 
+              class="save-btn" 
+             
+            >
+              <span *ngIf="isLoading" class="spinner"></span>
+              {{ isEditMode ? 'Update' : 'Save' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

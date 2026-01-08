@@ -1,0 +1,124 @@
+<div class="container-fluid mt-4">
+  <!-- Top Buttons -->
+  <div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between">
+      <button class="btn btn-info" *ngIf="CMVWUS" (click)="viewMessageInfo()">Show Status</button>
+      <button class="btn btn-info" (click)="goBack()">Back</button>
+    </div>
+  </div>
+
+  <!-- Subject, Message, Date -->
+  <div class="row mb-2">
+    <div class="col-12 d-flex">
+      <h5>Subject :</h5>&nbsp;&nbsp;<h5>{{ communication.name}}</h5>
+    </div>
+    <div class="col-12 d-flex">
+      <h5>Message :</h5>&nbsp;&nbsp;<h5>{{ communication.message }}</h5>
+    </div>
+    <div class="col-12 d-flex">
+      <h5>Created Date :</h5>&nbsp;&nbsp;<h5>{{ communication.message}}</h5>
+    </div>
+  </div>
+
+  <!-- Replies Table -->
+  <div class="table-panel mb-4">
+    <table class="table table-striped table-bordered table-sm">
+      <thead>
+        <tr>
+          <td>Sr. No.</td>
+          <td>Reply Date</td>
+          <td>Reply By</td>
+          <td>Reply Messages</td>
+          <td>Document</td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let reply of replies; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>{{ reply.replyDate }}</td>
+          <td>{{ reply.replyBy }}</td>
+          <td>{{ reply.message }}</td>
+          <td>
+            <a *ngIf="reply.document" [href]="reply.document" target="_blank">View</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Reply Form -->
+  <div *ngIf="RLYCOM" class="reply-box">
+    <h6 class="reply-title">Send Reply</h6>
+    <form (ngSubmit)="sendReply()">
+      <div class="form-group row">
+        <label for="replyMessage" class="col-4 col-form-label">Message :</label>
+        <div class="col-8">
+          <textarea id="replyMessage" [(ngModel)]="replyMessage" name="replyMessage"
+                    class="form-control" maxlength="1000" required></textarea>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="replyAttachments" class="col-4 col-form-label">Attachments :</label>
+        <div class="col-8">
+          <input type="file" id="replyAttachments" (change)="onFileChange($event)" multiple
+                 class="form-control" accept="image/jpg,image/jpeg,image/png,application/pdf" />
+          <div id="replyFileList" class="mt-2">
+            <span *ngFor="let file of replyAttachments" class="badge badge-secondary mr-1">{{ file.name }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Send</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- User List Modal -->
+<div class="modal fade" id="communicationUserModel" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">User List</h5>
+        <button type="button" class="close" data-bs-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <ul>
+          <li *ngFor="let user of users">{{ user }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User Report Modal -->
+<div class="modal fade" id="communicationUserReportModel" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">User List Report</h5>
+        <button type="button" class="close" data-bs-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-panel">
+          <table class="table table-striped table-bordered table-sm">
+            <thead>
+              <tr>
+                <td>Name</td>
+                <td>Status</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let status of userStatus">
+                <td>{{ status.name }}</td>
+                <td>{{ status.state }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

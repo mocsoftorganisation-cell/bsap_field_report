@@ -1,0 +1,69 @@
+
+
+<div class="login-premium-bg">
+  <div class="login-premium-card">
+    <div class="login-premium-left">
+      <div class="police-badge">
+        <img src="assets/images/bihar-police-logo.jpg" alt="Bihar Police Logo" class="police-logo" />
+        <div class="badge-title">Bihar Police</div>
+        <div class="badge-sub">Data Entry Portal</div>
+      </div>
+      <div class="police-accent"></div>
+    </div>
+    <div class="login-premium-right">
+      <div class="login-header">
+        <h2>BSAP - Bihar Police</h2>
+         <h4>Login</h4>
+        <p class="login-desc"></p>
+      </div>
+      <form class="login-form" (ngSubmit)="onLogin()">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="Enter your email"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="password-input">
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="password"
+              [(ngModel)]="password"
+              name="password"
+              placeholder="Enter your password"
+              required
+              (keypress)="onKeyPress($event)"
+            />
+            <button type="button" class="password-toggle" (click)="togglePasswordVisibility()" aria-label="Show/hide password">
+              <span class="eye-icon">{{ showPassword ? '👁' : '👁' }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="form-group checkbox-group">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; width: 100%;">
+            <div style="display: flex; align-items: center; white-space: nowrap;">
+              <input type="checkbox" id="rememberMe" [(ngModel)]="rememberMe" style="margin-right: 8px;">
+              <label for="rememberMe" style="margin-bottom: 0; font-size: 15px; white-space: nowrap;">Remember me</label>
+            </div>
+            <!-- <div>
+              <a href="#" class="forgot-password" (click)="onForgotPassword()" style="color: #3b6cb7; text-decoration: none; font-size: 14px;">Forgot Password?</a>
+            </div> -->
+          </div>
+        </div>
+        <div class="error-message" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+        <button type="submit" class="login-submit-btn" [disabled]="isLoading">
+          {{ isLoading ? 'Signing in...' : 'Sign In' }}
+        </button>
+      </form>
+      <!-- Footer removed as requested -->
+    </div>
+  </div>
+</div>

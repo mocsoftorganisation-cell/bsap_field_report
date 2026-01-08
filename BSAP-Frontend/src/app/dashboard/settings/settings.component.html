@@ -1,0 +1,72 @@
+<div class="settings-container">
+  <div class="page-header">
+    <h1>Settings</h1>
+    <p>Manage your application preferences and configurations.</p>
+  </div>
+  
+  <div class="settings-grid">
+    <div class="settings-card">
+      <h3>Notifications</h3>
+      <div class="setting-item">
+        <label class="setting-label">
+          <input
+            #notificationsInput
+            type="checkbox"
+            [checked]="settings.notifications"
+            (change)="updateSetting('notifications', notificationsInput.checked)"
+          />
+          <span class="checkmark"></span>
+          Enable push notifications
+        </label>
+      </div>
+    </div>
+    
+    <div class="settings-card">
+      <h3>Appearance</h3>
+      <div class="setting-item">
+        <label class="setting-label">
+          <input
+            #darkModeInput
+            type="checkbox"
+            [checked]="settings.darkMode"
+            (change)="updateSetting('darkMode', darkModeInput.checked)"
+          />
+          <span class="checkmark"></span>
+          Dark mode
+        </label>
+      </div>
+    </div>
+    
+    <div class="settings-card">
+      <h3>Language</h3>
+      <div class="setting-item">
+        <select
+          #languageSelect
+          [value]="settings.language"
+          (change)="updateSetting('language', languageSelect.value)"
+          class="setting-select"
+        >
+          <option value="en">English</option>
+          <option value="es">Spanish</option>
+          <option value="fr">French</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="settings-card">
+      <h3>Auto Save</h3>
+      <div class="setting-item">
+        <label class="setting-label">
+          <input
+            #autoSaveInput
+            type="checkbox"
+            [checked]="settings.autoSave"
+            (change)="updateSetting('autoSave', autoSaveInput.checked)"
+          />
+          <span class="checkmark"></span>
+          Automatically save changes
+        </label>
+      </div>
+    </div>
+  </div>
+</div>

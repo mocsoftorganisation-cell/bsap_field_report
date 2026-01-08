@@ -1,0 +1,118 @@
+<div class="dashboard-layout">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <button class="menu-toggle" (click)="toggleSidenav()">
+        <span class="hamburger-line" [class.collapsed]="isSidenavCollapsed"></span>
+        <span class="hamburger-line" [class.collapsed]="isSidenavCollapsed"></span>
+        <span class="hamburger-line" [class.collapsed]="isSidenavCollapsed"></span>
+      </button>
+      <h1 class="app-title">Menu</h1>
+    </div>
+    
+    <div class="header-right">
+      <div class="user-profile-container" (click)="toggleUserDropdown()">
+        <div class="user-avatar">
+          <img [src]="getUserAvatar()" [alt]="getUserDisplayName()" class="avatar-img">
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ getUserDisplayName() }}</span>
+          <span class="user-role">{{ getUserRole() }}</span>
+        </div>
+        <div class="dropdown-arrow">
+          <i class="fa fa-chevron-down" [class.rotated]="userDropdownOpen"></i>
+        </div>
+        
+        <!-- Dropdown Menu -->
+        <div class="profile-dropdown" *ngIf="userDropdownOpen">
+          <div class="dropdown-header">
+            <div class="dropdown-avatar">
+              <img [src]="getUserAvatar()" [alt]="getUserDisplayName()">
+            </div>
+            <div class="dropdown-user-info">
+              <div class="dropdown-name">{{ getUserDisplayName() }}</div>
+              <div class="dropdown-email">{{ getUserEmail() }}</div>
+            </div>
+          </div>
+          
+          <div class="dropdown-divider"></div>
+          
+          <div class="dropdown-menu-items">
+            <div class="dropdown-menu-item" (click)="editProfile()">
+              <i class="fa fa-user"></i>
+              <span>User profile</span>
+              <span class="shortcut">⌘E</span>
+            </div>
+          
+          </div>
+          
+          <div class="dropdown-divider"></div>
+          
+          <div class="dropdown-menu-item logout-item" (click)="logout()">
+            <i class="fa fa-sign-out"></i>
+            <span>Log out</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sidebar -->
+  <nav class="sidenav" [class.collapsed]="isSidenavCollapsed">
+    <div class="nav-content" #sidebarContainer>
+      <div *ngIf="isLoadingMenu" class="menu-loading">
+        <p>Loading menu...</p>
+      </div>
+      <ul *ngIf="!isLoadingMenu" class="nav-menu">
+        <ng-container *ngFor="let menu of menuData">
+          <li class="nav-item">
+            <div 
+              class="nav-link collapsible-menu"
+              [class.expanded]="expandedMenus[menu.id]"
+              (click)="menu.children && menu.children.length ? toggleMenu(menu.id) : (menu.url && menu.url !== '#' ? navigate(menu.url) : null)"
+              [class.has-children]="menu.children && menu.children.length"
+              style="text-align:left; cursor:pointer; display:flex; justify-content:space-between; align-items:center;"
+            >
+              <span class="nav-label">{{ menu.name }}</span>
+              <span class="nav-icon">
+                <span *ngIf="menu.children && menu.children.length" class="expand-icon" [class.expanded]="expandedMenus[menu.id]">&#9660;</span>
+              </span>
+            </div>
+            <ul *ngIf="menu.children && menu.children.length && expandedMenus[menu.id]" class="sub-menu">
+              <ng-container *ngFor="let submenu of menu.children">
+                <li class="sub-item">
+                  <div 
+                    class="nav-link collapsible-menu"
+                    [class.expanded]="expandedSubmenus[submenu.id]"
+                    (click)="submenu.children && submenu.children.length ? toggleSubmenu(submenu.id) : (submenu.url && submenu.url !== '#' ? navigate(submenu.url) : null)"
+                    [class.has-children]="submenu.children && submenu.children.length"
+                    style="text-align:left; cursor:pointer; display:flex; justify-content:space-between; align-items:center;"
+                  >
+                    <span class="nav-label">{{ submenu.name }}</span>
+                    <span class="nav-icon">
+                      <span *ngIf="submenu.children && submenu.children.length" class="expand-icon" [class.expanded]="expandedSubmenus[submenu.id]">&#9654;</span>
+                    </span>
+                  </div>
+                  <ul *ngIf="submenu.children && submenu.children.length && expandedSubmenus[submenu.id]" class="sub-menu">
+                    <ng-container *ngFor="let subchild of submenu.children">
+                      <li class="sub-item" [ngClass]="{ 'active-page': isActive(subchild.url) }">
+                        <div class="sub-link" style="text-align:left; cursor:pointer;" (click)="subchild.url && subchild.url !== '#' ? navigate(subchild.url) : null">
+                          {{ subchild.name }}
+                        </div>
+                      </li>
+                    </ng-container>
+                  </ul>
+                </li>
+              </ng-container>
+            </ul>
+          </li>
+        </ng-container>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content" [class.expanded]="isSidenavCollapsed">
+    <router-outlet></router-outlet>
+  </main>
+</div>
