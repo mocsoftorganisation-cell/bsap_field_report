@@ -6,7 +6,7 @@ const sequelize = require('../config/database');
 const MSG_INDIA_CONFIG = require('../config/msgIndia.config'); 
 const axios = require('axios');
 class PerformanceStatisticService {
-  /**
+  /**p
    * 
    * 
    * Get all performance statistics by user ID
@@ -34,6 +34,11 @@ class PerformanceStatisticService {
    * @param {string} date - Date string (YYYY-MM format)
    * @returns {number} Count
    */
+
+  
+ 
+ 
+ 
   async getCountByUserIdAndDate(userId, date) {
     const count = await PerformanceStatistic.count({
       where: {
