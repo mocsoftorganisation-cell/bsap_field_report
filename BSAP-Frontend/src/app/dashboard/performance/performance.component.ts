@@ -926,12 +926,15 @@ if (this.currentTopic?.id === this.strengthTopicId) {
     if (topic.topicSubName == "Budget Management") return "Budget Items";
     if (topic.topicSubName == "Surprise inspection of posts/guards/pickets")
       return "Inspected";
+    if (topic.topicSubName == "Scheduled Annual Inspection")
+      return "Inspected";
     if (topic.topicSubName == "No. of sessions") return "Training Session";
     if (topic.topicSubName == "Tradesmen, Ministerial, Supporting Staff")
       return "Rank";
 
     if (topic.topicSubName == "Earnings from monetized assets")
       return "Amenities";
+    if (topic.topicSubName == "Company's Deployment") return "Company";
 
     return "DETAILS";
   }
@@ -1251,13 +1254,15 @@ private updateCalculatedFields(): void {
     if (!this.performanceForm.valid) return;
 
     const statistics = this.prepareStatisticsData("DRAFT");
+    console.log("statstistics" , statistics);
+    
     if (statistics.length > 0) {
       this.performanceService
         .saveStatistics({ performanceStatistics: statistics })
         .subscribe({
           next: (response: ApiResponse) => {
             if (response.status === "SUCCESS") {
-              // console.log('Auto-saved successfully');
+              console.log('Auto-saved successfully');
             }
           },
           error: (error: any) => console.error("Auto-save failed:", error),
@@ -1276,6 +1281,8 @@ private updateCalculatedFields(): void {
 
     this.saving = true;
     const statistics = this.prepareStatisticsData("SAVED");
+    console.log("statistics", statistics);
+    
 
     this.performanceService
       .saveStatistics({ performanceStatistics: statistics })
@@ -1416,100 +1423,11 @@ private updateCalculatedFields(): void {
     });
   }
 
-  /**
-   * Prepare statistics data for submission
-   */
-
-  // private prepareStatisticsData(status: string): PerformanceStatistic[] {
-  //   const statistics: PerformanceStatistic[] = [];
-  //   const formValues = this.performanceForm.value;
-
-  //   console.log("Preparing statistics data with status:", status);
-  //   console.log("Form values:", formValues);
-
-  //   const questions =
-  //     this.currentTopic?.questions || this.currentTopic?.questionDTOs || [];
-
-  //   if (this.currentTopic?.formType === "NORMAL") {
-  //     questions.forEach((question) => {
-  //       if (this.isDocumentType(question)) {
-  //         const pdfFile = formValues[`pdf_${question.id}`];
-  //         const wordFile = formValues[`word_${question.id}`];
-
-  //         [pdfFile, wordFile].forEach((fileValue) => {
-  //           if (fileValue) {
-  //             statistics.push({
-  //               questionId: question.id,
-  //               value: fileValue,
-  //               topicId: this.currentTopic!.id,
-  //               moduleId: this.currentModule!.id,
-  //               status,
-  //             });
-  //           }
-  //         });
-  //       } else {
-  //         const value = formValues[`question_${question.id}`];
-  //         if (
-  //           value !== undefined &&
-  //           value !== null &&
-  //           (value !== "" || value === 0 || value === "0")
-  //         ) {
-  //           statistics.push({
-  //             questionId: question.id,
-  //             value: value.toString(),
-  //             topicId: this.currentTopic!.id,
-  //             moduleId: this.currentModule!.id,
-  //             status,
-  //           });
-  //         }
-  //       }
-  //     });
-  //   }
-
-  //   if (["Q/ST", "ST/Q"].includes(this.currentTopic?.formType ?? "")) {
-  //     questions.forEach((question) => {
-  //       this.currentTopic?.subTopics?.forEach((subTopic) => {
-  //         if (this.isDocumentType(question)) {
-  //           const pdfControlName = `pdf_${question.id}_${subTopic.id}`;
-  //           const wordControlName = `word_${question.id}_${subTopic.id}`;
-
-  //           const pdfFile = formValues[pdfControlName];
-  //           const wordFile = formValues[wordControlName];
-
-  //           [pdfFile, wordFile].forEach((fileValue) => {
-  //             if (fileValue) {
-  //               statistics.push({
-  //                 questionId: question.id,
-  //                 subTopicId: subTopic.id,
-  //                 value: fileValue,
-  //                 topicId: this.currentTopic!.id,
-  //                 moduleId: this.currentModule!.id,
-  //                 status,
-  //               });
-  //             }
-  //           });
-  //         } else {
-  //           const controlName = `matrix_${question.id}_${subTopic.id}`;
-  //           const value = formValues[controlName];
-  //           statistics.push({
-  //             questionId: question.id,
-  //             subTopicId: subTopic.id,
-  //             value: value.toString(),
-  //             topicId: this.currentTopic!.id,
-  //             moduleId: this.currentModule!.id,
-  //             status,
-  //           });
-  //         }
-  //       });
-  //     });
-  //   }
-
-  //   console.log("✅ Final prepared statistics:", statistics);
-  //   return statistics;
-  // }
 
 
-  private prepareStatisticsData(status: string): PerformanceStatistic[] {
+
+
+ private prepareStatisticsData(status: string): PerformanceStatistic[] {
   const statistics: PerformanceStatistic[] = [];
   const formValues = this.performanceForm.value;
 
@@ -1519,6 +1437,7 @@ private updateCalculatedFields(): void {
   const questions = this.currentTopic?.questions || this.currentTopic?.questionDTOs || [];
 
   if (this.currentTopic?.formType === 'NORMAL') {
+        console.log("--------------------------------------------------------");
     questions.forEach(question => {
       if (this.isDocumentType(question)) {
         const pdfFile = formValues[`pdf_${question.id}`];
@@ -1627,6 +1546,50 @@ const companiesToLoop = hasCompanies ? this.selectedCompanies : [ null ];
   return statistics;
 }
 
+
+
+
+
+
+// Check if subtopic is for Signed PDF
+// isSignedPDFSubTopic(subTopic: any): boolean {
+//   const subTopicName = subTopic.subTopicName?.toLowerCase() || '';
+//   const subTopicCode = subTopic.subTopicCode?.toLowerCase() || '';
+  
+//   return subTopicName.includes('signed') || 
+//          subTopicName.includes('pdf') ||
+//          subTopicName === 'signed pdf' ||
+//          subTopicName === 'pdf file' ||
+//          subTopicCode === 'pdf' ||
+//          subTopicCode === 'signed';
+// }
+
+// Check if subtopic is for Editable Word file
+// isEditableWordSubTopic(subTopic: any): boolean {
+//   const subTopicName = subTopic.subTopicName?.toLowerCase() || '';
+//   const subTopicCode = subTopic.subTopicCode?.toLowerCase() || '';
+  
+//   return subTopicName.includes('editable') || 
+//          subTopicName.includes('word') ||
+//          subTopicName.includes('doc') ||
+//          subTopicName === 'editable word' ||
+//          subTopicName === 'word file' ||
+//          subTopicName === 'editable document' ||
+//          subTopicCode === 'word' ||
+//          subTopicCode === 'doc' ||
+//          subTopicCode === 'editable';
+// }
+
+// Get the appropriate file key prefix based on subtopic type
+getFileKeyPrefix(subTopic: any): string {
+  if (this.isSignedPDFSubTopic(subTopic)) {
+    return 'pdf_';
+  } else if (this.isEditableWordSubTopic(subTopic)) {
+    return 'word_';
+  } else {
+    return 'document_';
+  }
+}
   /**
    * Check if date fields should be shown
    */
@@ -2376,11 +2339,148 @@ getMatrixValue(questionId: number, subTopicId: number, companyId?: number): stri
     );
   }
 
-  isDocumentType(question: any): boolean {
-    return (
-      question.type === "PDF_DOCUMENT" || question.type === "WORD_DOCUMENT"
-    );
+  // isDocumentType(question: any): boolean {
+  //   return (
+  //     question.type === "PDF_DOCUMENT" || question.type === "WORD_DOCUMENT"
+  //   );
+// Check if it's a document type based on question AND subtopic
+// Check if it's a document type based on question AND subtopic
+isDocumentType(question: any, subTopic?: any): boolean {
+  // First check if question itself is document type
+  if (question.type === 'DOCUMENT' || 
+      question.type === 'FILE' || 
+      question.question?.toLowerCase().includes('document') ||
+      question.question?.toLowerCase().includes('file') ||
+      question.question?.toLowerCase().includes('upload')) {
+    return true;
   }
+  
+  // Additional check based on subtopic name
+  if (subTopic) {
+    const subTopicName = subTopic.subTopicName?.toLowerCase() || '';
+    const subTopicCode = subTopic.subTopicCode?.toLowerCase() || '';
+    
+    // Check for document-related subtopics
+    return subTopicName.includes('signed') || 
+           subTopicName.includes('pdf') || 
+           subTopicName.includes('document') ||
+           subTopicName.includes('file') ||
+           subTopicName.includes('word') ||
+           subTopicName.includes('editable') ||
+           subTopicCode.includes('doc') ||
+           subTopicCode.includes('file') ||
+           subTopicCode.includes('pdf');
+  }
+  
+  return false;
+}
+
+// Check if subtopic is specifically for Signed PDF (exclusive)
+isSignedPDFSubTopic(subTopic: any): boolean {
+  const subTopicName = subTopic.subTopicName?.toLowerCase() || '';
+  const subTopicCode = subTopic.subTopicCode?.toLowerCase() || '';
+  
+  // More specific checks for Signed PDF
+  const isSignedPdf = (subTopicName.includes('signed') && subTopicName.includes('pdf')) ||
+                     subTopicName === 'signed pdf' ||
+                     subTopicName === 'pdf file' ||
+                     subTopicName === 'signed document' ||
+                     (subTopicName.includes('pdf') && !subTopicName.includes('word')) ||
+                     subTopicCode === 'pdf' ||
+                     subTopicCode === 'signed_pdf' ||
+                     subTopicCode === 'signed';
+  
+  // Make sure it's NOT an editable/word type
+  const isNotEditable = !subTopicName.includes('editable') && 
+                       !subTopicName.includes('word') &&
+                       !subTopicName.includes('docx') &&
+                       subTopicCode !== 'word' &&
+                       subTopicCode !== 'doc' &&
+                       subTopicCode !== 'editable';
+  
+  return isSignedPdf && isNotEditable;
+}
+
+// Check if subtopic is specifically for Editable Word file (exclusive)
+isEditableWordSubTopic(subTopic: any): boolean {
+  const subTopicName = subTopic.subTopicName?.toLowerCase() || '';
+  const subTopicCode = subTopic.subTopicCode?.toLowerCase() || '';
+  
+  // More specific checks for Editable Word
+  const isEditableWord = (subTopicName.includes('editable') && subTopicName.includes('word')) ||
+                        subTopicName === 'editable word' ||
+                        subTopicName === 'word file' ||
+                        subTopicName === 'editable document' ||
+                        subTopicName === 'word document' ||
+                        (subTopicName.includes('word') && !subTopicName.includes('pdf')) ||
+                        (subTopicName.includes('doc') && !subTopicName.includes('pdf')) ||
+                        subTopicCode === 'word' ||
+                        subTopicCode === 'doc' ||
+                        subTopicCode === 'editable' ||
+                        subTopicCode === 'editable_word';
+  
+  // Make sure it's NOT a signed/pdf type
+  const isNotSignedPdf = !subTopicName.includes('signed') && 
+                        !subTopicName.includes('pdf') &&
+                        subTopicCode !== 'pdf' &&
+                        subTopicCode !== 'signed';
+  
+  return isEditableWord && isNotSignedPdf;
+}
+
+// Alternative: Simplified approach with priority-based detection
+getFileTypeForSubTopic(subTopic: any): 'pdf' | 'word' | 'document' {
+  const subTopicName = subTopic.subTopicName?.toLowerCase() || '';
+  const subTopicCode = subTopic.subTopicCode?.toLowerCase() || '';
+  
+  // Priority 1: Check for signed PDF (highest priority)
+  const signedPdfKeywords = ['signed pdf', 'pdf file', 'signed document'];
+  const pdfKeywords = ['pdf', 'signed'];
+  
+  for (const keyword of signedPdfKeywords) {
+    if (subTopicName.includes(keyword) || subTopicName === keyword) {
+      return 'pdf';
+    }
+  }
+  
+  // Priority 2: Check for editable Word
+  const editableWordKeywords = ['editable word', 'word file', 'editable document', 'word document'];
+  const wordKeywords = ['word', 'doc', 'editable', 'docx'];
+  
+  for (const keyword of editableWordKeywords) {
+    if (subTopicName.includes(keyword) || subTopicName === keyword) {
+      return 'word';
+    }
+  }
+  
+  // Priority 3: Check individual keywords with context
+  if ((subTopicName.includes('signed') || subTopicCode.includes('signed')) && 
+      !subTopicName.includes('word')) {
+    return 'pdf';
+  }
+  
+  if ((subTopicName.includes('pdf') || subTopicCode.includes('pdf')) && 
+      !subTopicName.includes('word') && 
+      !subTopicName.includes('editable')) {
+    return 'pdf';
+  }
+  
+  if ((subTopicName.includes('editable') || subTopicCode.includes('editable')) && 
+      !subTopicName.includes('pdf')) {
+    return 'word';
+  }
+  
+  if ((subTopicName.includes('word') || subTopicName.includes('doc') || 
+       subTopicCode.includes('word') || subTopicCode.includes('doc')) && 
+      !subTopicName.includes('pdf')) {
+    return 'word';
+  }
+  
+  // Default fallback
+  return 'document';
+}
+
+// Updated template with the simplified approach
 
   // Method to check if we should show the preview
 shouldShowStrengthPreview(): boolean {

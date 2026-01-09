@@ -28,6 +28,8 @@ const forgotPasswordValidation = [
 
 // Login endpoint
 router.post('/login', loginValidation, (req, res) => {
+
+  
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json(formatResponse(false, 'Validation failed', null, errors.array()));

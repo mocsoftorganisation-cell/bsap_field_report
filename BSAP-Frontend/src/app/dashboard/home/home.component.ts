@@ -157,33 +157,74 @@ users:any
     });
   }
 
-  private loadPerformanceStatus(): void {
-    this.api.getPerformanceOverview().subscribe({
-      next: (res) => {
-        if (res && res.status === 'SUCCESS' && res.data) {
-          const d: any = res.data;
-          // if battalionStats available, map to dataStatus items
-          if (Array.isArray(d.battalionStats) && d.battalionStats.length > 0) {
-            this.dataStatus = d.battalionStats.map((b: any) => ({
-              name: b.battalionName || `Battalion ${b.battalionId}`,
-              progress: `${b.modulesWithData} of ${b.totalActiveModules}`
-            }));
-            return;
-          }
+  // private loadPerformanceStatus(): void {
+  //   this.api.getPerformanceOverview().subscribe({
+  //     next: (res) => {
+  //       if (res && res.status === 'SUCCESS' && res.data) {
+  //         const d: any = res.data;
+  //         // if battalionStats available, map to dataStatus items
+  //         if (Array.isArray(d.battalionStats) && d.battalionStats.length > 0) {
+  //           this.dataStatus = d.battalionStats.map((b: any) => ({
+  //             name: b.battalionName || `Battalion ${b.battalionId}`,
+  //             progress: `${b.modulesWithData} of ${b.totalActiveModules}`
+  //           }));
+  //           return;
+  //         }
 
-          // Fallback: if recentPerformanceCount exists use that
-          if (d.recentPerformanceCount !== undefined) {
-            const n = Math.max(0, Number(d.recentPerformanceCount));
-            this.dataStatus = Array.from({ length: n }).map((_, i) => ({
-              name: `Recent Perf ${i + 1}`,
-              progress: '0 out of 9'
-            }));
-          }
+  //         // Fallback: if recentPerformanceCount exists use that
+  //         if (d.recentPerformanceCount !== undefined) {
+  //           const n = Math.max(0, Number(d.recentPerformanceCount));
+  //           this.dataStatus = Array.from({ length: n }).map((_, i) => ({
+  //             name: `Recent Perf ${i + 1}`,
+  //             progress: '0 out of 9'
+  //           }));
+  //         }
+  //       }
+  //     },
+  //     error: (err) => {
+  //       console.error('Failed to load performance overview', err);
+  //     }
+  //   });
+  // }
+    private loadPerformanceStatus(): void {
+  this.api.getPerformanceOverview().subscribe({
+    next: (res) => {
+      if (res && res.status === 'SUCCESS' && res.data) {
+        const d: any = res.data;
+        
+        // if battalionStats available, map to dataStatus items
+        if (Array.isArray(d.battalionStats) && d.battalionStats.length > 0) {
+          this.dataStatus = d.battalionStats.map((b: any) => {
+            // Determine total active modules based on battalionId
+            let totalActiveModules = b.totalActiveModules;
+            
+            // Check if battalionId is 24, 25, 26, or 27
+            const specialBattalionIds = [24, 25, 26, 27];
+            if (specialBattalionIds.includes(b.battalionId)) {
+              totalActiveModules = 6; // Set to 6 for these specific battalions
+            }
+            
+            return {
+              name: b.battalionName || `Battalion ${b.battalionId}`,
+              progress: `${b.modulesWithData} of ${totalActiveModules}`
+            };
+          });
+          return;
         }
-      },
-      error: (err) => {
-        console.error('Failed to load performance overview', err);
+
+        // Fallback: if recentPerformanceCount exists use that
+        if (d.recentPerformanceCount !== undefined) {
+          const n = Math.max(0, Number(d.recentPerformanceCount));
+          this.dataStatus = Array.from({ length: n }).map((_, i) => ({
+            name: `Recent Perf ${i + 1}`,
+            progress: '0 out of 9'
+          }));
+        }
       }
-    });
-  }
+    },
+    error: (err) => {
+      console.error('Failed to load performance overview', err);
+    }
+  });
+}
 }

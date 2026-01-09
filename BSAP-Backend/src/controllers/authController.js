@@ -1,3 +1,4 @@
+const { log } = require('winston');
 const { authService } = require('../services');
 const logger = require('../utils/logger');
 
@@ -5,6 +6,7 @@ const logger = require('../utils/logger');
 async function login(req, res) {
   try {
     const result = await authService.doLogin(req.body);
+   
 
     res.cookie('token', result.token, {
       httpOnly: true,
@@ -27,6 +29,7 @@ async function login(req, res) {
     logger.error('Login error:', error);
     const statusCode = /invalid|incorrect/i.test(error.message) ? 401 : 400;
     res.status(statusCode).json({ status: 'ERROR', message: error.message });
+   
   }
 }
 

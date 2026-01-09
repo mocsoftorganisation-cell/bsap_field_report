@@ -4,9 +4,9 @@ require('dotenv').config();
 
 // Main sequelize instance for the application
 const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USERNAME,
-  process.env.DB_PASSWORD,
+  process.env.DB_NAME || 'bsap_db',
+  process.env.DB_USERNAME || 'root',
+  process.env.DB_PASSWORD || 'root',
   {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,

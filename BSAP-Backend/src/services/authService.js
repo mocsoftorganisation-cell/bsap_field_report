@@ -5,10 +5,13 @@ const { comparePassword, hashPassword } = require('../utils/helpers');
 const otpUtility = require('../utils/otpUtility');
 const smsUtil = require('../utils/smsUtil');
 const logger = require('../utils/logger');
+const { log } = require('winston');
 
 class AuthService {
   /* ================= LOGIN ================= */
   async doLogin(loginData) {
+    
+    
     const { email, password } = loginData;
     if (!email || !password) throw new Error('Email and password are required');
 
@@ -17,6 +20,7 @@ class AuthService {
       include: [{ model: Role, as: 'role', where: { active: true } }]
     });
 
+    console.log('User found during login:', user ? user.get({ plain: true }) : null);
     if (!user) throw new Error('Incorrect username or password!');
     const isValid = await comparePassword(password, user.password);
     if (!isValid) throw new Error('Incorrect username or password!');

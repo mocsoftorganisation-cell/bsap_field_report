@@ -91,27 +91,28 @@
                   ></span>
                 </td>
 
+            
                 <!-- Document-type questions -->
                 @if (isDocumentType(question)) {
                 <td class="document-cell">
                   <input
                     type="file"
-                    accept=".pdf,.doc,.docx"
+                    accept="application/pdf"
                     class="normal-input"
-                    (change)="onFileSelect($event, 'document_' + question.id)"
+                    (change)="onFileSelect($event, 'pdf_' + question.id)"
                   />
-                   <!-- <small class="hint-text">Optional: PDF or Word document</small> -->
                 </td>
 
                 <td class="document-cell">
                   <input
                     type="file"
-                    accept="application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    accept=".doc,.docx"
                     class="normal-input"
-                    (change)="onFileSelect($event, 'document_' + question.id)"
+                    (change)="onFileSelect($event, 'word_' + question.id)"
                   />
                 </td>
                 }
+         
          
 
                 @else if (question.type === 'DATE' &&
@@ -340,12 +341,24 @@
                     *ngFor="let subTopic of currentTopic.subTopics"
                     class="input-cell"
                   >
-                    @if(isDocumentType(question)) {
+                    <!-- @if(isDocumentType(question)) {
                     <input
                       type="file"
                       accept=".pdf,.doc,.docx"
                       class="matrix-input"
                       (change)="onFileSelect($event, 'document_' + question.id + '_' + subTopic.id)"
+                    /> -->
+                    @if(isDocumentType(question)) {
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      class="matrix-input"
+                      (change)="
+                        onFileSelect(
+                          $event,
+                          'pdf_' + question.id + '_' + subTopic.id
+                        )
+                      "
                     />
                     }@else if (question.type=== 'DATE') {
                     <input
@@ -457,7 +470,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr
+              <!-- <tr
                 *ngFor="
                   let question of currentTopic.questions ||
                     currentTopic.questionDTOs;
@@ -476,12 +489,17 @@
                   *ngFor="let subTopic of currentTopic.subTopics"
                   class="input-cell"
                 >
-                  @if(isDocumentType(question)) {
+                   @if(isDocumentType(question)) {
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx"
                     class="matrix-input"
-                    (change)="onFileSelect($event, 'document_' + question.id + '_' + subTopic.id)"
+                    (change)="
+                      onFileSelect(
+                        $event,
+                        'pdf_' + question.id + '_' + subTopic.id
+                      )
+                    "
                   />
                   }@else if (question.type=== 'DATE') {
                   <input
@@ -506,7 +524,93 @@
                   />
                   }
                 </td>
-              </tr>
+              </tr> -->
+            
+            
+            <tr
+  *ngFor="
+    let question of currentTopic.questions ||
+      currentTopic.questionDTOs;
+    let i = index
+  "
+  class="matrix-row"
+>
+  <td class="question-cell">
+    <span class="question-number">{{ i + 1 }}.</span>
+    <span
+      class="question-text"
+      [innerHTML]="formatQuestionText(question)"
+    ></span>
+  </td>
+  <td
+    *ngFor="let subTopic of currentTopic.subTopics"
+    class="input-cell"
+  >
+    @if(isDocumentType(question, subTopic)) {
+      @if (isSignedPDFSubTopic(subTopic)) {
+        <input
+          type="file"
+          accept="application/pdf"
+          class="matrix-input"
+          (change)="
+            onFileSelect(
+              $event,
+              'pdf_' + question.id + '_' + subTopic.id
+            )
+          "
+        />
+      
+      } @else if (isEditableWordSubTopic(subTopic)) {
+        <input
+          type="file"
+          accept=".doc,.docx"
+          class="matrix-input"
+          (change)="
+            onFileSelect(
+              $event,
+              'word_' + question.id + '_' + subTopic.id
+            )
+          "
+        />
+     
+      } @else {
+        <input
+          type="file"
+          accept=".pdf,.doc,.docx"
+          class="matrix-input"
+          (change)="
+            onFileSelect(
+              $event,
+              'document_' + question.id + '_' + subTopic.id
+            )
+          "
+        />
+        <small class="hint-text">PDF or Word files</small>
+      }
+    } @else if (question.type === 'DATE') {
+      <input
+        type="date"
+        class="matrix-input"
+        [formControlName]="
+          'matrix_' + question.id + '_' + subTopic.id
+        "
+        placeholder="Select date"
+      />
+    } @else {
+      <input
+        type="number"
+        class="matrix-input"
+        [formControlName]="
+          'matrix_' + question.id + '_' + subTopic.id
+        "
+        [class.calculated-field]="
+          isCalculatedField(question.id, subTopic.id)
+        "
+        placeholder="0"
+      />
+    }
+  </td>
+</tr>
             </tbody>
           </table>
         </div>
