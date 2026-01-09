@@ -200,6 +200,17 @@
   margin-left: 8px;
   color: #ef4444;
 }
+.status-progress.complete {
+  color: #16a34a; /* Green color for complete progress */
+  font-weight: 600;
+}
+
+/* Optional: Add more visual distinction */
+.status-progress.complete {
+  color: #059669;
+  font-weight: bold;
+}
+
 
 @media (max-width: 960px) {
   .cards-grid {

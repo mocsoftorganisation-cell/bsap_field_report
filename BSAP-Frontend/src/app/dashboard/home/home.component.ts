@@ -186,33 +186,50 @@ users:any
   //     }
   //   });
   // }
-    private loadPerformanceStatus(): void {
+private loadPerformanceStatus(): void {
   this.api.getPerformanceOverview().subscribe({
     next: (res) => {
       if (res && res.status === 'SUCCESS' && res.data) {
         const d: any = res.data;
         
-        // if battalionStats available, map to dataStatus items
+        console.log('Full response:', res); // Debug: Check full response
+        console.log('battalionStats:', d.battalionStats); // Debug: Check battalionStats structure
+        
         if (Array.isArray(d.battalionStats) && d.battalionStats.length > 0) {
-          this.dataStatus = d.battalionStats.map((b: any) => {
+          // Log first item to see actual field names
+          console.log('First battalion item:', d.battalionStats[0]);
+          console.log('Available keys:', Object.keys(d.battalionStats[0]));
+          
+          // Sort battalionStats by id (database column name)
+          const sortedBattalionStats = [...d.battalionStats].sort((a, b) => {
+            // Try different possible field names
+            const aId = a.id || a.battalionId || a.battalion_id || 0;
+            const bId = b.id || b.battalionId || b.battalion_id || 0;
+            return aId - bId;
+          });
+          
+          console.log('Sorted battalionStats:', sortedBattalionStats); // Debug: Check sorting
+          
+          this.dataStatus = sortedBattalionStats.map((b: any) => {
             // Determine total active modules based on battalionId
             let totalActiveModules = b.totalActiveModules;
             
             // Check if battalionId is 24, 25, 26, or 27
             const specialBattalionIds = [24, 25, 26, 27];
-            if (specialBattalionIds.includes(b.battalionId)) {
-              totalActiveModules = 6; // Set to 6 for these specific battalions
+            const battalionId = b.id || b.battalionId || b.battalion_id;
+            if (specialBattalionIds.includes(battalionId)) {
+              totalActiveModules = 6;
             }
             
             return {
-              name: b.battalionName || `Battalion ${b.battalionId}`,
+              name: b.battalionName || `Battalion ${battalionId}`,
               progress: `${b.modulesWithData} of ${totalActiveModules}`
             };
           });
           return;
         }
 
-        // Fallback: if recentPerformanceCount exists use that
+        // Fallback
         if (d.recentPerformanceCount !== undefined) {
           const n = Math.max(0, Number(d.recentPerformanceCount));
           this.dataStatus = Array.from({ length: n }).map((_, i) => ({
@@ -226,5 +243,17 @@ users:any
       console.error('Failed to load performance overview', err);
     }
   });
+}
+isProgressComplete(progress: string): boolean {
+  if (!progress) return false;
+  
+  const match = progress.match(/(\d+)\s*of\s*(\d+)/);
+  if (match) {
+    const current = parseInt(match[1], 10);
+    const total = parseInt(match[2], 10);
+    return current === total;
+  }
+  
+  return false;
 }
 }

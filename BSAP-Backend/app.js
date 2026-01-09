@@ -9,7 +9,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const http = require('http');
 const app = express();
-app.use(cors({ origin: 'http://localhost:4200' }));
+// app.use(cors({ origin: 'http://localhost:4200' }));
 
 
 require('dotenv').config();

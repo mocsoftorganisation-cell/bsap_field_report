@@ -38,9 +38,17 @@
     </div>
     <div class="status-list">
       <div *ngFor="let item of dataStatus" class="status-item">
-        <div class="loc">{{ item.name }}</div>
-        <div class="progress">({{ item.progress }})</div>
-      </div>
+  <span class="status-name">{{ item.name }}</span>
+  <span 
+    [class.complete]="isProgressComplete(item.progress)"
+    class="status-progress"
+  >
+    {{ item.progress }}
+  </span>
+</div>
+    
     </div>
+
+    
   </aside>
 </div>
