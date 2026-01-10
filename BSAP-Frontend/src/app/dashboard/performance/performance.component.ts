@@ -2572,9 +2572,9 @@ private buildTopicListIncrementally(): void {
   isDocumentType(question: any, subTopic?: any): boolean {
     // First check if question itself is document type
     if (question.type === 'DOCUMENT' || 
-        question.type === 'FILE' || 
+       
         question.question?.toLowerCase().includes('document') ||
-        question.question?.toLowerCase().includes('file') ||
+        
         question.question?.toLowerCase().includes('upload')) {
       return true;
     }
@@ -2588,11 +2588,11 @@ private buildTopicListIncrementally(): void {
       return subTopicName.includes('signed') || 
              subTopicName.includes('pdf') || 
              subTopicName.includes('document') ||
-             subTopicName.includes('file') ||
+             
              subTopicName.includes('word') ||
              subTopicName.includes('editable') ||
              subTopicCode.includes('doc') ||
-             subTopicCode.includes('file') ||
+          
              subTopicCode.includes('pdf');
     }
     
