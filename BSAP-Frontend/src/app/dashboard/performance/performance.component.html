@@ -21,7 +21,9 @@
     <div class="breadcrumb" *ngIf="currentModule && currentTopic">
       <div>
         <span class="breadcrumb-item1">Module - </span>
-        <span class="breadcrumb-item active">{{ currentModule.moduleName }}</span>
+        <span class="breadcrumb-item active">{{
+          currentModule.moduleName
+        }}</span>
       </div>
       <div>
         <span class="breadcrumb-item1">Topic - </span>
@@ -65,24 +67,26 @@
                 @if (hasDocumentType()) {
                 <th class="signed-pdf-header">Signed PDF</th>
                 <th class="editable-word-header">Editable Word File</th>
-                } @else { 
-                  @if (hasPreviousQuestion()) {
-                  <th class="previous-header">Previous Month</th>
-                  }
-                  <th class="current-header">Current Month</th>
-                  @if (hasCumulativeQuestion()) {
-                  <th class="cumulative-header">Cumulative Month</th>
-                  } 
+                } @else { @if (hasPreviousQuestion()) {
+                <th class="previous-header">Previous Month</th>
                 }
+                <th class="current-header">Current Month</th>
+                @if (hasCumulativeQuestion()) {
+                <th class="cumulative-header">Cumulative Month</th>
+                } }
               </tr>
             </thead>
 
             <tbody>
-              @for (question of currentTopic.questionDTOs; track question.id; let i = $index) {
+              @for (question of currentTopic.questionDTOs; track question.id;
+              let i = $index) {
               <tr class="normal-row">
                 <td class="sr-no-cell">{{ i + 1 }}</td>
                 <td class="question-cell">
-                  <span class="question-text" [innerHTML]="formatQuestionText(question)"></span>
+                  <span
+                    class="question-text"
+                    [innerHTML]="formatQuestionText(question)"
+                  ></span>
                 </td>
 
                 <!-- Document-type questions -->
@@ -105,26 +109,32 @@
                     title="Upload Word file only"
                   />
                 </td>
-                } 
-                @else if (question.type === 'DATE' && shouldShowDateFields(question)) {
+                } @else if (question.type === 'DATE' &&
+                shouldShowDateFields(question)) {
                 <!-- Span across multiple columns -->
                 <td [colSpan]="getDateFieldColspan()" class="date-fields-cell">
                   <div class="date-fields-container">
                     <div class="date-fields-grid">
-                      @for (dateField of getDateFieldsArray(); track $index; let dateIndex = $index) {
+                      @for (dateField of getDateFieldsArray(); track $index; let
+                      dateIndex = $index) {
                       <div class="date-field-item">
-                        <label class="date-label">Date {{ dateIndex + 1 }}:</label>
+                        <label class="date-label"
+                          >Date {{ dateIndex + 1 }}:</label
+                        >
                         <input
                           type="date"
                           class="date-input"
-                          [formControlName]="'date_' + question.id + '_' + dateIndex"
+                          [formControlName]="
+                            'date_' + question.id + '_' + dateIndex
+                          "
                           [min]="previousMonthMin"
                           [max]="previousMonthMax"
                           placeholder="Select date"
                         />
 
-                        @if (performanceForm.get('date_' + question.id + '_' + dateIndex)?.invalid && 
-                             performanceForm.get('date_' + question.id + '_' + dateIndex)?.touched) {
+                        @if (performanceForm.get('date_' + question.id + '_' +
+                        dateIndex)?.invalid && performanceForm.get('date_' +
+                        question.id + '_' + dateIndex)?.touched) {
                         <div class="error-message small-error">
                           Date {{ dateIndex + 1 }} is required
                         </div>
@@ -134,7 +144,8 @@
                     </div>
                     @if (hasDuplicateDates()) {
                     <div class="error-message">
-                      Duplicate dates are not allowed. Please select different dates for each Police Sabha.
+                      Duplicate dates are not allowed. Please select different
+                      dates for each Police Sabha.
                     </div>
                     }
                   </div>
@@ -142,69 +153,66 @@
                 }
                 <!-- Numeric-type questions -->
                 @else if (question.question.includes('No. of Police Sabha')) {
-                  @if (hasPreviousQuestion()) {
-                  <td class="previous-cell">
-                    <input
-                      type="text"
-                      class="normal-input readonly"
-                      [value]="question.previousCount || '0'"
-                      readonly
-                    />
-                  </td>
-                  }
-                  <td class="current-cell">
-                    <input
-                      type="number"
-                      class="normal-input"
-                      [formControlName]="'question_' + question.id"
-                      [placeholder]="question.defaultVal"
-                      [readonly]="question.isDisabled"
-                      (input)="onPoliceSabhaCountChange($event, question.id)"
-                    />
-                  </td>
-                  @if (hasCumulativeQuestion()) {
-                  <td class="cumulative-cell">
-                    <input
-                      type="text"
-                      class="normal-input readonly"
-                      [value]="getCumulativeValue(question)"
-                      readonly
-                    />
-                  </td>
-                  } 
+                @if (hasPreviousQuestion()) {
+                <td class="previous-cell">
+                  <input
+                    type="text"
+                    class="normal-input readonly"
+                    [value]="question.previousCount || '0'"
+                    readonly
+                  />
+                </td>
                 }
+                <td class="current-cell">
+                  <input
+                    type="number"
+                    class="normal-input"
+                    [formControlName]="'question_' + question.id"
+                    [placeholder]="question.defaultVal"
+                    [readonly]="question.isDisabled"
+                    (input)="onPoliceSabhaCountChange($event, question.id)"
+                  />
+                </td>
+                @if (hasCumulativeQuestion()) {
+                <td class="cumulative-cell">
+                  <input
+                    type="text"
+                    class="normal-input readonly"
+                    [value]="getCumulativeValue(question)"
+                    readonly
+                  />
+                </td>
+                } }
                 <!-- Regular numeric-type questions -->
-                @else { 
-                  @if (hasPreviousQuestion()) {
-                  <td class="previous-cell">
-                    <input
-                      type="text"
-                      class="normal-input readonly"
-                      [value]="question.previousCount || '0'"
-                      readonly
-                    />
-                  </td>
-                  }
-                  <td class="current-cell">
-                    <input
-                      type="number"
-                      class="normal-input"
-                      [formControlName]="'question_' + question.id"
-                      [placeholder]="question.defaultVal"
-                      [readonly]="question.isDisabled"
-                    />
-                  </td>
-                  @if (hasCumulativeQuestion()) {
-                  <td class="cumulative-cell">
-                    <input
-                      type="text"
-                      class="normal-input readonly"
-                      [value]="getCumulativeValue(question)"
-                      readonly
-                    />
-                  </td>
-                  } 
+                @else { @if (hasPreviousQuestion()) {
+                <td class="previous-cell">
+                  <input
+                    type="text"
+                    class="normal-input readonly"
+                    [value]="question.previousCount || '0'"
+                    readonly
+                  />
+                </td>
                 }
+                <td class="current-cell">
+                  <input
+                    type="number"
+                    class="normal-input"
+                    [formControlName]="'question_' + question.id"
+                    [placeholder]="question.defaultVal"
+                    [readonly]="question.isDisabled"
+                  />
+                </td>
+                @if (hasCumulativeQuestion()) {
+                <td class="cumulative-cell">
+                  <input
+                    type="text"
+                    class="normal-input readonly"
+                    [value]="getCumulativeValue(question)"
+                    readonly
+                  />
+                </td>
+                } }
               </tr>
               }
             </tbody>
@@ -212,14 +220,13 @@
         </div>
 
         <!-- Error messages -->
-        @for (question of currentTopic.questionDTOs; track question.id; let i = $index) { 
-          @if (performanceForm.get('question_' + question.id)?.invalid && 
-               performanceForm.get('question_' + question.id)?.touched) {
-          <div class="error-message">
-            Question {{ i + 1 }}: This field is required
-          </div>
-          } 
-        }
+        @for (question of currentTopic.questionDTOs; track question.id; let i =
+        $index) { @if (performanceForm.get('question_' + question.id)?.invalid
+        && performanceForm.get('question_' + question.id)?.touched) {
+        <div class="error-message">
+          Question {{ i + 1 }}: This field is required
+        </div>
+        } }
       </div>
       }
 
@@ -230,7 +237,9 @@
         </h3>
 
         <div *ngIf="shouldShowCompanyFilter()" class="subtopic-filter">
-          <label for="company-select" class="filter-label">Select Company(One or more):</label>
+          <label for="company-select" class="filter-label"
+            >Select Company(One or more):</label
+          >
           <select
             id="company-select"
             class="subtopic-select multiple"
@@ -247,12 +256,20 @@
             </option>
           </select>
           <div class="filter-instructions">
-            <small>Hold Ctrl (or Cmd on Mac) to select one or more company</small>
+            <small
+              >Hold Ctrl (or Cmd on Mac) to select one or more company</small
+            >
           </div>
           <div *ngIf="selectedSubTopics.length > 0" class="selection-count">
-            {{ selectedSubTopics.length }} amenit{{ selectedSubTopics.length === 1 ? "y" : "ies" }} selected
+            {{ selectedSubTopics.length }} amenit{{
+              selectedSubTopics.length === 1 ? "y" : "ies"
+            }}
+            selected
           </div>
-          <div *ngIf="selectedSubTopics.length === 0 && shouldShowSubTopicFilter()" class="filter-hint">
+          <div
+            *ngIf="selectedSubTopics.length === 0 && shouldShowSubTopicFilter()"
+            class="filter-hint"
+          >
             Please select one or more companies to display the form
 
             <button
@@ -276,73 +293,117 @@
           </div>
 
           <div class="matrix-container" *ngIf="shouldShowCompanyFilter()">
-            <div *ngFor="let compId of selectedCompanies" class="matrix-container">
-              <h3 class="company-title">Company: {{ getCompanyName(compId) }}</h3>
+            <div
+              *ngFor="let compId of selectedCompanies"
+              class="matrix-container"
+            >
+              <h3 class="company-title">
+                Company: {{ getCompanyName(compId) }}
+              </h3>
 
               <table class="matrix-table">
                 <thead>
                   <tr>
                     <th class="question-header">Questions</th>
-                    <th *ngFor="let subTopic of currentTopic.subTopics" class="subtopic-header">
+                    <th
+                      *ngFor="let subTopic of currentTopic.subTopics"
+                      class="subtopic-header"
+                    >
                       {{ subTopic.subTopicName }}
                     </th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  <tr *ngFor="let question of currentTopic.questions; let i = index">
+                  <tr
+                    *ngFor="
+                      let question of currentTopic.questions;
+                      let i = index
+                    "
+                  >
                     <td class="question-cell">
                       <span class="question-number">{{ i + 1 }}.</span>
-                      <span class="question-text" [innerHTML]="formatQuestionText(question)"></span>
+                      <span
+                        class="question-text"
+                        [innerHTML]="formatQuestionText(question)"
+                      ></span>
                     </td>
 
-                    <td *ngFor="let subTopic of currentTopic.subTopics" class="input-cell">
+                    <td
+                      *ngFor="let subTopic of currentTopic.subTopics"
+                      class="input-cell"
+                    >
                       @if(isDocumentType(question, subTopic)) {
-                        <!-- PDF file upload for Signed PDF subtopics -->
-                        @if (shouldAcceptPDFOnly(subTopic)) {
-                        <input
-                          type="file"
-                          accept="application/pdf"
-                          class="matrix-input"
-                          (change)="onFileSelect($event, 'pdf_' + question.id + '_' + subTopic.id)"
-                        />
-                        <small class="hint-text">PDF files only</small>
-                        }
-                        <!-- Word file upload for Editable Word subtopics -->
-                        @else if (shouldAcceptWordOnly(subTopic)) {
-                        <input
-                          type="file"
-                          accept=".doc,.docx"
-                          class="matrix-input"
-                          (change)="onFileSelect($event, 'word_' + question.id + '_' + subTopic.id)"
-                        />
-                        <small class="hint-text">Word (.doc, .docx) files only</small>
-                        }
-                        <!-- General document upload for other cases -->
-                        @else {
-                        <input
-                          type="file"
-                          accept=".pdf,.doc,.docx"
-                          class="matrix-input"
-                          (change)="onFileSelect($event, 'doc_' + question.id + '_' + subTopic.id)"
-                        />
-                        <small class="hint-text">PDF or Word files</small>
-                        } 
-                      } 
-                      @else if (question.type === 'DATE') {
+                      <!-- PDF file upload for Signed PDF subtopics -->
+                      @if (shouldAcceptPDFOnly(subTopic)) {
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        class="matrix-input"
+                        (change)="
+                          onFileSelect(
+                            $event,
+                            'pdf_' + question.id + '_' + subTopic.id
+                          )
+                        "
+                      />
+                      <small class="hint-text">PDF files only</small>
+                      }
+                      <!-- Word file upload for Editable Word subtopics -->
+                      @else if (shouldAcceptWordOnly(subTopic)) {
+                      <input
+                        type="file"
+                        accept=".doc,.docx"
+                        class="matrix-input"
+                        (change)="
+                          onFileSelect(
+                            $event,
+                            'word_' + question.id + '_' + subTopic.id
+                          )
+                        "
+                      />
+                      <small class="hint-text"
+                        >Word (.doc, .docx) files only</small
+                      >
+                      }
+                      <!-- General document upload for other cases -->
+                      @else {
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        class="matrix-input"
+                        (change)="
+                          onFileSelect(
+                            $event,
+                            'doc_' + question.id + '_' + subTopic.id
+                          )
+                        "
+                      />
+                      <small class="hint-text">PDF or Word files</small>
+                      } } @else if (question.type === 'DATE') {
                       <input
                         type="date"
                         class="matrix-input"
-                        [formControlName]="'matrix_' + question.id + '_' + subTopic.id"
+                        [formControlName]="
+                          'matrix_' + question.id + '_' + subTopic.id
+                        "
                         placeholder="Select date"
                       />
-                      } 
-                      @else {
+                      } @else {
                       <input
                         type="number"
                         class="matrix-input"
-                        [formControlName]="'matrix_' + compId + '_' + question.id + '_' + subTopic.id"
-                        [class.calculated-field]="isCalculatedField(question.id, subTopic.id)"
+                        [formControlName]="
+                          'matrix_' +
+                          compId +
+                          '_' +
+                          question.id +
+                          '_' +
+                          subTopic.id
+                        "
+                        [class.calculated-field]="
+                          isCalculatedField(question.id, subTopic.id)
+                        "
                         placeholder="0"
                       />
                       }
@@ -353,24 +414,35 @@
             </div>
           </div>
 
-          <h4 class="preview-title"><i class="fas fa-chart-bar"></i>Strength in all Coys</h4>
+          <h4 class="preview-title">
+            <i class="fas fa-chart-bar"></i>Strength in all Coys
+          </h4>
 
           <div class="preview-container">
             <table class="preview-table">
               <thead>
                 <tr>
                   <th>Question</th>
-                  <th *ngFor="let subTopic of currentTopic?.subTopics">{{ subTopic.subTopicName }}</th>
+                  <th *ngFor="let subTopic of currentTopic?.subTopics">
+                    {{ subTopic.subTopicName }}
+                  </th>
                   <th>Total</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let question of getPreviewQuestions()">
-                  <td class="preview-question"><strong>{{ question.text }}</strong></td>
-                  <td *ngFor="let subTopic of currentTopic?.subTopics" class="preview-value">
+                  <td class="preview-question">
+                    <strong>{{ question.text }}</strong>
+                  </td>
+                  <td
+                    *ngFor="let subTopic of currentTopic?.subTopics"
+                    class="preview-value"
+                  >
                     {{ getPreviewValue(question.id, subTopic.id) }}
                   </td>
-                  <td class="preview-total"><strong>{{ getQuestionTotal(question.id) }}</strong></td>
+                  <td class="preview-total">
+                    <strong>{{ getQuestionTotal(question.id) }}</strong>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -378,7 +450,9 @@
             <div class="preview-summary">
               <div class="summary-item">
                 <span class="summary-label">Total Companies:</span>
-                <span class="summary-value">{{ selectedCompanies.length }}</span>
+                <span class="summary-value">{{
+                  selectedCompanies.length
+                }}</span>
               </div>
             </div>
           </div>
@@ -389,62 +463,93 @@
             <thead>
               <tr>
                 <th class="question-header">Questions</th>
-                <th *ngFor="let subTopic of currentTopic.subTopics" class="subtopic-header">
+                <th
+                  *ngFor="let subTopic of currentTopic.subTopics"
+                  class="subtopic-header"
+                >
                   {{ subTopic.subTopicName }}
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let question of currentTopic.questions || currentTopic.questionDTOs; let i = index"
-                class="matrix-row">
+              <tr
+                *ngFor="
+                  let question of currentTopic.questions ||
+                    currentTopic.questionDTOs;
+                  let i = index
+                "
+                class="matrix-row"
+              >
                 <td class="question-cell">
                   <span class="question-number">{{ i + 1 }}.</span>
-                  <span class="question-text" [innerHTML]="formatQuestionText(question)"></span>
+                  <span
+                    class="question-text"
+                    [innerHTML]="formatQuestionText(question)"
+                  ></span>
                 </td>
-                <td *ngFor="let subTopic of currentTopic.subTopics" class="input-cell">
-                  @if(isDocumentType(question, subTopic)) { 
-                    @if (shouldAcceptPDFOnly(subTopic)) {
-                    <input
-                      type="file"
-                      accept="application/pdf"
-                      class="matrix-input"
-                      (change)="onFileSelect($event, 'pdf_' + question.id + '_' + subTopic.id)"
-                    />
-                    <small class="hint-text">PDF files only</small>
-                    } 
-                    @else if (shouldAcceptWordOnly(subTopic)) {
-                    <input
-                      type="file"
-                      accept=".doc,.docx"
-                      class="matrix-input"
-                      (change)="onFileSelect($event, 'word_' + question.id + '_' + subTopic.id)"
-                    />
-                    <small class="hint-text">Word (.doc, .docx) files only</small>
-                    } 
-                    @else {
-                    <input
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      class="matrix-input"
-                      (change)="onFileSelect($event, 'doc_' + question.id + '_' + subTopic.id)"
-                    />
-                    <small class="hint-text">PDF or Word files</small>
-                    } 
-                  } 
-                  @else if (question.type === 'DATE') {
+                <td
+                  *ngFor="let subTopic of currentTopic.subTopics"
+                  class="input-cell"
+                >
+                  @if(isDocumentType(question, subTopic)) { @if
+                  (shouldAcceptPDFOnly(subTopic)) {
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    class="matrix-input"
+                    (change)="
+                      onFileSelect(
+                        $event,
+                        'pdf_' + question.id + '_' + subTopic.id
+                      )
+                    "
+                  />
+                  <small class="hint-text">PDF files only</small>
+                  } @else if (shouldAcceptWordOnly(subTopic)) {
+                  <input
+                    type="file"
+                    accept=".doc,.docx"
+                    class="matrix-input"
+                    (change)="
+                      onFileSelect(
+                        $event,
+                        'word_' + question.id + '_' + subTopic.id
+                      )
+                    "
+                  />
+                  <small class="hint-text">Word (.doc, .docx) files only</small>
+                  } @else {
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    class="matrix-input"
+                    (change)="
+                      onFileSelect(
+                        $event,
+                        'doc_' + question.id + '_' + subTopic.id
+                      )
+                    "
+                  />
+                  <small class="hint-text">PDF or Word files</small>
+                  } } @else if (question.type === 'DATE') {
                   <input
                     type="date"
                     class="matrix-input"
-                    [formControlName]="'matrix_' + question.id + '_' + subTopic.id"
+                    [formControlName]="
+                      'matrix_' + question.id + '_' + subTopic.id
+                    "
                     placeholder="Select date"
                   />
-                  } 
-                  @else {
+                  } @else {
                   <input
                     type="number"
                     class="matrix-input"
-                    [formControlName]="'matrix_' + question.id + '_' + subTopic.id"
-                    [class.calculated-field]="isCalculatedField(question.id, subTopic.id)"
+                    [formControlName]="
+                      'matrix_' + question.id + '_' + subTopic.id
+                    "
+                    [class.calculated-field]="
+                      isCalculatedField(question.id, subTopic.id)
+                    "
                     placeholder="0"
                   />
                   }
@@ -463,7 +568,9 @@
 
         <!-- SubTopic Filter Dropdown - Multiple Selection -->
         <div *ngIf="shouldShowSubTopicFilter()" class="subtopic-filter">
-          <label for="subtopic-select" class="filter-label">Select(Multiple):</label>
+          <label for="subtopic-select" class="filter-label"
+            >Select(Multiple):</label
+          >
           <select
             id="subtopic-select"
             class="subtopic-select multiple"
@@ -483,39 +590,79 @@
             <small>Hold Ctrl (or Cmd on Mac) to select multiple</small>
           </div>
           <div *ngIf="selectedSubTopics.length > 0" class="selection-count">
-            {{ selectedSubTopics.length }} amenit{{ selectedSubTopics.length === 1 ? "y" : "ies" }} selected
+            {{ selectedSubTopics.length }} amenit{{
+              selectedSubTopics.length === 1 ? "y" : "ies"
+            }}
+            selected
           </div>
-          <div *ngIf="selectedSubTopics.length === 0 && shouldShowSubTopicFilter()" class="filter-hint">
+          <div
+            *ngIf="selectedSubTopics.length === 0 && shouldShowSubTopicFilter()"
+            class="filter-hint"
+          >
             Please select one or more to display the form
           </div>
 
           <!-- Select All / None Buttons -->
           <div class="selection-actions" *ngIf="shouldShowSubTopicFilter()">
-            <button type="button" class="btn btn-sm btn-outline" (click)="selectAllSubTopics()">Select All</button>
-            <button type="button" class="btn btn-sm btn-outline" (click)="clearAllSubTopics()">Clear All</button>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline"
+              (click)="selectAllSubTopics()"
+            >
+              Select All
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline"
+              (click)="clearAllSubTopics()"
+            >
+              Clear All
+            </button>
           </div>
         </div>
 
-        <div class="matrix-container" *ngIf="!shouldShowSubTopicFilter() || selectedSubTopics">
+        <div
+          class="matrix-container"
+          *ngIf="!shouldShowSubTopicFilter() || selectedSubTopics"
+        >
           <table class="matrix-table">
             <thead>
               <tr>
                 <th class="subtopic-header">{{ getSubTopicHeader() }}</th>
-                <th *ngFor="let question of currentTopic.questions || currentTopic.questionDTOs; let i = index"
-                  class="question-header">
+                <th
+                  *ngFor="
+                    let question of currentTopic.questions ||
+                      currentTopic.questionDTOs;
+                    let i = index
+                  "
+                  class="question-header"
+                >
                   {{ question.question }}
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let subTopic of getSubTopicsToDisplay(); let i = index" class="matrix-row">
+              <tr
+                *ngFor="let subTopic of getSubTopicsToDisplay(); let i = index"
+                class="matrix-row"
+              >
                 <td class="subtopic-cell">{{ subTopic.subTopicName }}</td>
-                <td *ngFor="let question of currentTopic.questions || currentTopic.questionDTOs" class="input-cell">
+                <td
+                  *ngFor="
+                    let question of currentTopic.questions ||
+                      currentTopic.questionDTOs
+                  "
+                  class="input-cell"
+                >
                   <input
                     type="number"
                     class="matrix-input"
-                    [formControlName]="'matrix_' + question.id + '_' + subTopic.id"
-                    [class.calculated-field]="isCalculatedField(question.id, subTopic.id)"
+                    [formControlName]="
+                      'matrix_' + question.id + '_' + subTopic.id
+                    "
+                    [class.calculated-field]="
+                      isCalculatedField(question.id, subTopic.id)
+                    "
                     placeholder="0"
                   />
                 </td>
@@ -525,10 +672,14 @@
         </div>
 
         <!-- Show message when no subtopic is selected for filtered topic -->
-        <div *ngIf="shouldShowSubTopicFilter() && !hasSelectedSubTopics()" class="no-selection-container">
+        <div
+          *ngIf="shouldShowSubTopicFilter() && !hasSelectedSubTopics()"
+          class="no-selection-container"
+        >
           <div class="no-selection-message">
             <i class="fas fa-info-circle"></i>
-            Please select one or more amenities from the dropdown above to display the form.
+            Please select one or more amenities from the dropdown above to
+            display the form.
           </div>
         </div>
       </div>
@@ -536,36 +687,66 @@
       <!-- Action Buttons -->
       <div class="action-buttons">
         <div class="navigation-buttons">
-          <button type="button" class="btn btn-secondary" (click)="navigatePrevious()" [disabled]="!prevNavInfo"
-            [disabled]="!prevModule && !prevTopic">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="navigatePrevious()"
+            [disabled]="!prevNavInfo"
+            [disabled]="!prevModule && !prevTopic"
+          >
             <i class="fas fa-arrow-left"></i> Previous
           </button>
 
-          <button type="button" class="btn btn-secondary" (click)="navigateNext()" [disabled]="!nextNavInfo"
-            [disabled]="!nextModule && !nextTopic">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="navigateNext()"
+            [disabled]="!nextNavInfo"
+            [disabled]="!nextModule && !nextTopic"
+          >
             Next <i class="fas fa-arrow-right"></i>
           </button>
 
-          <button type="button" class="btn btn-primary" (click)="goToPreviousModule()" [disabled]="!prevModule">
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="goToPreviousModule()"
+            [disabled]="!prevModule"
+          >
             Previous Module <i class="fas fa-backward"></i>
           </button>
 
-          <button type="button" class="btn btn-primary" (click)="goToNextModule()" [disabled]="!nextModule">
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="goToNextModule()"
+            [disabled]="!nextModule"
+          >
             Next Module <i class="fas fa-forward"></i>
           </button>
         </div>
 
+        <!-- Action Buttons section in your template -->
         <div class="form-buttons">
-          <button type="button" class="btn btn-outline" (click)="saveForm()" [disabled]="saving">
+          <button
+            type="button"
+            class="btn btn-outline"
+            (click)="saveForm()"
+            [disabled]="saving"
+          >
             <i class="fas fa-save"></i>
             {{ saving ? "Saving..." : "Save Draft" }}
           </button>
 
-          <button type="button" class="btn btn-primary" (click)="submitForm()"
-            [disabled]="saving || !performanceForm.valid">
-            <i class="fas fa-paper-plane"></i>
-            {{ saving ? "Submitting..." : "Submit" }}
-          </button>
+          <!-- Submit button shown only on last topic by priority -->
+          <button *ngIf="shouldShowSubmitButton()" 
+        type="button" 
+        class="btn btn-primary" 
+        (click)="submitForm()"
+        [disabled]="saving || !performanceForm.valid">
+  <i class="fas fa-paper-plane"></i>
+  {{ saving ? "Submitting..." : "Submit All" }}
+</button>
         </div>
       </div>
     </form>
@@ -579,13 +760,21 @@
     <h3>Form Submitted Successfully!</h3>
     <p>Your performance statistics have been recorded.</p>
     <div class="success-actions">
-      <button class="btn btn-primary" (click)="navigateNext()" *ngIf="nextModule || nextTopic">
+      <button
+        class="btn btn-primary"
+        (click)="navigateNext()"
+        *ngIf="nextModule || nextTopic"
+      >
         Continue to Next
       </button>
-      <button class="btn btn-outline" routerLink="/dashboard/homePage">Back to Dashboard</button>
+      <button class="btn btn-outline" routerLink="/dashboard/homePage">
+        Back to Dashboard
+      </button>
     </div>
   </div>
 </div>
+
+
 
 <!-- OTP Verification Modal -->
 <div *ngIf="showOTPModal" class="modal-overlay" (click)="closeOTPModal()">
@@ -599,8 +788,14 @@
       <p>Please enter the 6-digit OTP sent to your registered mobile number:</p>
 
       <div class="otp-input-container">
-        <input type="text" class="otp-input" [(ngModel)]="otpValue" placeholder="Enter OTP" maxlength="6"
-          pattern="[0-9]{6}" />
+        <input
+          type="text"
+          class="otp-input"
+          [(ngModel)]="otpValue"
+          placeholder="Enter OTP"
+          maxlength="6"
+          pattern="[0-9]{6}"
+        />
       </div>
 
       <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
@@ -608,8 +803,11 @@
 
     <div class="modal-footer">
       <button class="btn btn-outline" (click)="closeOTPModal()">Cancel</button>
-      <button class="btn btn-primary" (click)="verifyOTP()"
-        [disabled]="!otpValue || otpValue.length !== 6 || saving">
+      <button
+        class="btn btn-primary"
+        (click)="verifyOTP()"
+        [disabled]="!otpValue || otpValue.length !== 6 || saving"
+      >
         {{ saving ? "Verifying..." : "Verify OTP" }}
       </button>
     </div>
@@ -621,3 +819,12 @@
   <i class="fas fa-clock"></i>
   Auto-saving...
 </div>
+
+
+<!-- Simple debug button - shows in bottom right corner -->
+<button 
+  (click)="simpleDebug()"
+  style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; padding: 10px; background: #007bff; color: white; border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; font-size: 20px;"
+  title="Click to debug">
+  🔍
+</button>

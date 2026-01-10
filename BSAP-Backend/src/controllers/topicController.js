@@ -521,10 +521,24 @@ async function reorder(req, res) {
 }
 
 // GET /api/topics/module/:moduleId - Get topics by module ID for form generation
+// In topicController.js, update the byModuleForForm function:
 async function byModuleForForm(req, res) {
   try {
     const { moduleId } = req.params;
+    console.log(`🔍 Fetching topics for module ${moduleId}`);
+    
     const topics = await TopicService.findTopicByModuleId(moduleId);
+    
+    // Debug: Check what's being returned
+    if (topics && topics.length > 0) {
+      console.log('🔍 First topic structure:', {
+        id: topics[0].id,
+        topicName: topics[0].topicName,
+        priority: topics[0].priority,
+        hasPriorityField: 'priority' in topics[0],
+        allKeys: Object.keys(topics[0])
+      });
+    }
     
     res.json({
       status: 'SUCCESS',
@@ -532,6 +546,7 @@ async function byModuleForForm(req, res) {
       data: topics
     });
   } catch (error) {
+    console.error('Error in byModuleForForm:', error);
     res.status(500).json({
       status: 'ERROR',
       message: 'Failed to retrieve topics for module',

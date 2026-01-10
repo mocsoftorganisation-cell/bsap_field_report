@@ -713,36 +713,61 @@ class TopicService {
   }
 
   // Get active topics by module ID (used for performance statistics form generation)
-  static async findTopicByModuleId(moduleId) {
-    return await Topic.findAll({
-      where: { 
-        moduleId,
-        active: true 
+// Line 410-447 in TopicService.js - Update this method:
+static async findTopicByModuleId(moduleId) {
+  const topics = await Topic.findAll({
+    where: { 
+      moduleId,
+      active: true 
+    },
+    attributes: [  // ⬅️ ADD THIS to explicitly select fields
+      'id',
+      'topicName',
+      'subName',
+      'priority',      // ⬅️ MAKE SURE THIS IS INCLUDED
+      'formType',
+      'moduleId',
+      'isShowCummulative',
+      'isShowPrevious',
+      'isStartJan',
+      'startMonth',
+      'endMonth',
+      'active'
+    ],
+    include: [
+      {
+        model: Module,
+        as: 'module',
+        attributes: ['id', 'moduleName', 'priority']
       },
-      include: [
-        {
-          model: Module,
-          as: 'module',
-          attributes: ['id', 'moduleName', 'priority']
-        },
-        {
-          model: SubTopic,
-          as: 'subTopics',
-          where: { active: true },
-          required: false,
-          order: [['priority', 'ASC']]
-        },
-        {
-          model: Question,
-          as: 'questions',
-          where: { active: true },
-          required: false,
-          order: [['priority', 'ASC']]
-        }
-      ],
-      order: [['priority', 'ASC']]
-    });
-  }
+      {
+        model: SubTopic,
+        as: 'subTopics',
+        where: { active: true },
+        required: false,
+        order: [['priority', 'ASC']]
+      },
+      {
+        model: Question,
+        as: 'questions',
+        where: { active: true },
+        required: false,
+        order: [['priority', 'ASC']]
+      }
+    ],
+    order: [['priority', 'ASC']]
+  });
+  
+  // Convert to plain objects and ensure priority is included
+  return topics.map(topic => {
+    const plainTopic = topic.get({ plain: true });
+    // Ensure priority is explicitly set (not undefined)
+    if (plainTopic.priority === undefined || plainTopic.priority === null) {
+      plainTopic.priority = 0; // Default value
+    }
+    return plainTopic;
+  });
+}
 
   // Get topic with form configuration for dynamic form generation
   static async getTopicWithFormConfig(topicId) {

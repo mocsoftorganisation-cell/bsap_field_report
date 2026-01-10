@@ -309,6 +309,21 @@ export class PerformanceStatisticService {
     return this.http.get<ApiResponse>(`${this.baseUrl}/success-count/user/${userId}/date/${date}`);
   }
 
+  // In your performance-statistic.service.ts, add:
+  /**
+   * Get all topics for a module
+   */
+  // getAllTopicsForModule(moduleId: number): Observable<ApiResponse<TopicDTO[]>> {
+  //   return this.http.get<ApiResponse<TopicDTO[]>>(
+  //     `${this.baseUrl}/modules/${moduleId}/topics`
+  //   );
+  // }
+  getAllTopicsForModule(moduleId: number): Observable<ApiResponse<TopicDTO[]>> {
+  return this.http.get<ApiResponse<TopicDTO[]>>(
+    `${environment.apiUrl}topics/module/${moduleId}`  // ✅ Correct
+  );
+}
+
   /**
    * Upload document file
    */

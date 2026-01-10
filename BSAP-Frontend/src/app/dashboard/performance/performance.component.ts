@@ -110,29 +110,25 @@ getFileUploadCount(): number {
   return this.fileUploads ? Object.keys(this.fileUploads).length : 0;
 }
 
-  ngOnInit(): void {
-    // Get route parameters
-    this.route.queryParams.subscribe((params) => {
-      // Clear all data first
-      this.selectedCompanies = [];
-      this.clearComponentData();
+//   ngOnInit(): void {
+//   this.route.queryParams.subscribe((params) => {
+//     // Clear all data first
+//     this.selectedCompanies = [];
+//     this.clearComponentData();
 
-      this.moduleId = params["module"] ? parseInt(params["module"]) : 0;
-      this.topicId = params["topic"] ? parseInt(params["topic"]) : 1;
-      
-      console.log('Parsed - Module ID:', this.moduleId, 'Topic ID:', this.topicId);
-      this.loadPerformanceData();
-      this.loadCompanies();
+//     this.moduleId = params["module"] ? parseInt(params["module"]) : 0;
+//     this.topicId = params["topic"] ? parseInt(params["topic"]) : 1;
+    
+//     console.log('Loading module:', this.moduleId, 'topic:', this.topicId);
+//     this.loadPerformanceData();
+//     this.loadCompanies();
+//   });
+// }
 
-      console.log(
-        "Query Params → module =",
-        this.moduleId,
-        "topic =",
-        this.topicId
-      );
-      console.log("Modules array =", this.modules);
-    });
-  }
+/**
+ * Clear all component data before loading new data
+ */
+
 
   ngOnDestroy(): void {
     if (this.autoSaveInterval) {
@@ -161,39 +157,48 @@ getFileUploadCount(): number {
   /**
    * Clear all component data before loading new data
    */
-  private clearComponentData(): void {
-    // Clear auto-save interval
-    if (this.autoSaveInterval) {
-      clearInterval(this.autoSaveInterval);
-      this.autoSaveInterval = null;
-    }
+  /**
+ * Clear all component data before loading new data
+ */
+// private clearComponentData(): void {
+//   // Clear auto-save interval
+//   if (this.autoSaveInterval) {
+//     clearInterval(this.autoSaveInterval);
+//     this.autoSaveInterval = null;
+//   }
 
-    // Clear form data
-    this.performanceForm = this.formBuilder.group({});
-    this.formData = {};
+//   // Clear form data
+//   this.performanceForm = this.formBuilder.group({});
+//   this.formData = {};
 
-    // Clear navigation data
-    this.modules = [];
-    this.currentModule = null;
-    this.currentTopic = null;
-    this.userDistrict = "";
-    this.monthYear = "";
+//   // Clear navigation data
+//   this.modules = [];
+//   this.currentModule = null;
+//   this.currentTopic = null;
+//   this.currentModuleTopics = []; // NEW: Add this line
+//   this.userDistrict = "";
+//   this.monthYear = "";
 
-    // Clear navigation flags
-    this.nextModule = false;
-    this.prevModule = false;
-    this.nextTopic = false;
-    this.prevTopic = false;
+//   // Clear navigation flags
+//   this.nextModule = false;
+//   this.prevModule = false;
+//   this.nextTopic = false;
+//   this.prevTopic = false;
 
-    // Clear UI state
-    this.loading = false;
-    this.saving = false;
-    this.showOTPModal = false;
-    this.isSuccess = false;
-    this.errorMessage = "";
-    this.successMessage = "";
-    this.otpValue = "";
-  }
+//   // Clear UI state
+//   this.loading = false;
+//   this.saving = false;
+//   this.showOTPModal = false;
+//   this.isSuccess = false;
+//   this.errorMessage = "";
+//   this.successMessage = "";
+//   this.otpValue = "";
+  
+//   // NEW: Clear file uploads if you have that property
+//   if (this.fileUploads) {
+//     this.fileUploads = {};
+//   }
+// }
 
   /**
    * Load performance data from service
@@ -227,38 +232,43 @@ getFileUploadCount(): number {
   /**
    * Process the form data response
    */
-  private processFormData(data: PerformanceFormResponse): void {
-    this.modules = data.modules || [];
-    this.userDistrict = data.userDistrict || "";
-    this.monthYear = data.monthYear || "";
-    this.isSuccess = data.isSuccess || false;
-    this.nextModule = data.nextModule || false;
-    this.prevModule = data.prevModule || false;
-    this.nextTopic = data.nextTopic || false;
-    this.prevTopic = data.prevTopic || false;
+private processFormData(data: PerformanceFormResponse): void {
+  this.modules = data.modules || [];
+  this.userDistrict = data.userDistrict || "";
+  this.monthYear = data.monthYear || "";
+  this.isSuccess = data.isSuccess || false;
+  this.nextModule = data.nextModule || false;
+  this.prevModule = data.prevModule || false;
+  this.nextTopic = data.nextTopic || false;
+  this.prevTopic = data.prevTopic || false;
 
-    // Set current module and topic
-    if (this.modules.length > 0) {
-      this.currentModule = this.modules[0];
+  if (this.modules.length > 0) {
+    this.currentModule = this.modules[0];
 
-      if (this.currentModule.topicDTOs && this.currentModule.topicDTOs.length > 0) {
-        this.currentTopic = this.currentModule.topicDTOs[0];
-        this.updateNavigationInfo();
-    
-        console.log("current module ", this.currentModule);
-        console.log("current topic ", this.currentTopic);
-        
-        this.buildFormControls();
-        this.setupAutoSave();
+    if (this.currentModule.topicDTOs && this.currentModule.topicDTOs.length > 0) {
+      // Find the topic that matches the route parameter
+      const targetTopic = this.currentModule.topicDTOs.find(t => t.id === this.topicId);
+      
+      if (targetTopic) {
+        this.currentTopic = targetTopic;
       } else {
-        console.warn('No topics available for this module — attempting to skip to next');
-        this.trySkipToNextAvailable();
+        // Fallback to first topic if exact match not found
+        this.currentTopic = this.currentModule.topicDTOs[0];
       }
-    } else {
-      console.warn('No modules found in response — attempting to skip to next');
-      this.trySkipToNextAvailable();
+      
+      this.updateNavigationInfo();
+      
+      // Try to fetch all topics first, fallback to incremental if fails
+      this.fetchAllTopicsForModule();
+      
+      this.buildFormControls();
+      this.setupAutoSave();
+      
+      // Debug info
+      this.debugTopicInfo();
     }
   }
+}
 
   /**
    * Try to skip to the next module/topic when the current one has no content.
@@ -1683,6 +1693,429 @@ getFileUploadCount(): number {
       }
     });
   }
+
+
+private modulePriorities = new Map<number, {topicId: number; priority: number; topicName: string}[]>(); // moduleId -> topics with priorities
+private currentModuleTopics: TopicDTO[] = [];
+
+  /**
+ * Extract priority from topic - handles different API field names
+ */
+private getTopicPriority(topic: TopicDTO): number {
+  // First, let's see what fields are available
+  console.log('🔍 TOPIC OBJECT KEYS:', Object.keys(topic));
+  
+  // Try different possible priority field names
+  // The API might be sending it with a different name
+  const priority = (topic as any).priority || 
+                  (topic as any).Priority || 
+                  (topic as any).PRIORITY ||
+                  (topic as any).displayOrder ||
+                  (topic as any).order ||
+                  topic.id; // Fallback to ID
+  
+  console.log('🔍 Priority found:', priority, 'for topic', topic.id, topic.topicName);
+  
+  return priority;
+}
+
+/**
+ * Extract and store priorities for current module
+ */
+
+// Add this property
+private allModuleTopics = new Map<number, TopicDTO[]>(); // moduleId -> all topics
+
+/**
+ * Fetch all topics for the current module
+ */
+/**
+ * Fetch all topics for the current module
+ */
+private fetchAllTopicsForModule(): void {
+  if (!this.moduleId) return;
+  
+  // Check if we already fetched topics for this module
+  if (this.allModuleTopics.has(this.moduleId)) {
+    console.log('📚 Using cached topics for module', this.moduleId);
+    this.storeModulePriorities();
+    return;
+  }
+  
+  console.log('📚 Fetching all topics for module', this.moduleId);
+  
+  // Call the service method
+  this.performanceService.getAllTopicsForModule(this.moduleId).subscribe({
+    next: (response: ApiResponse<TopicDTO[]>) => {
+      if (response.status === "SUCCESS" && response.data) {
+        // DEBUG: Log the FULL response
+        console.log('🔍 FULL API RESPONSE:', response);
+        console.log('🔍 FIRST TOPIC FULL OBJECT:', JSON.stringify(response.data[0], null, 2));
+        
+        // Store all topics for this module
+        this.allModuleTopics.set(this.moduleId, response.data);
+        
+        // DEBUG: Show what we're getting
+        console.log('🔍 RAW TOPIC DATA:', response.data);
+        this.debugPriorityValues();
+        
+        // Now store priorities based on ALL topics
+        this.storeModulePriorities();
+        
+        console.log('✅ Fetched all topics:', {
+          moduleId: this.moduleId,
+          totalTopics: response.data.length,
+          topics: response.data.map(t => ({
+            id: t.id,
+            name: t.topicName,
+            priority: (t as any).priority // Make sure this shows actual priority
+          }))
+        });
+      } else {
+        console.warn('⚠️ Failed to fetch all topics:', response.message);
+        // Fallback to incremental approach
+        this.buildTopicListIncrementally();
+      }
+    },
+    error: (error: any) => {
+      console.error('Error fetching all topics for module:', error);
+      // Fallback: use incremental approach
+      this.buildTopicListIncrementally();
+    }
+  });
+}
+private clearComponentData(): void {
+  // Clear auto-save interval
+  if (this.autoSaveInterval) {
+    clearInterval(this.autoSaveInterval);
+    this.autoSaveInterval = null;
+  }
+
+  // Clear form data
+  this.performanceForm = this.formBuilder.group({});
+  this.formData = {};
+
+  // Clear navigation data
+  this.modules = [];
+  this.currentModule = null;
+  this.currentTopic = null;
+  this.userDistrict = "";
+  this.monthYear = "";
+
+  // Clear navigation flags
+  this.nextModule = false;
+  this.prevModule = false;
+  this.nextTopic = false;
+  this.prevTopic = false;
+
+  // Clear UI state
+  this.loading = false;
+  this.saving = false;
+  this.showOTPModal = false;
+  this.isSuccess = false;
+  this.errorMessage = "";
+  this.successMessage = "";
+  this.otpValue = "";
+  
+  // Clear file uploads
+  if (this.fileUploads) {
+    this.fileUploads = {};
+  }
+  
+  // 🔧 NEW: Don't clear allModuleTopics - we want to cache them
+  // But clear modulePriorities for current module
+  if (this.moduleId) {
+    this.modulePriorities.delete(this.moduleId);
+  }
+}
+
+/**
+ * Updated: Store priorities based on ALL topics in module
+ */
+private storeModulePriorities(): void {
+  if (!this.moduleId) return;
+  
+  const allTopics = this.allModuleTopics.get(this.moduleId) || [];
+  
+  if (allTopics.length === 0) return;
+  
+  // Call debug method to see what we're getting
+  this.debugPriorityValues();
+  
+  const topicsWithPriority = allTopics.map(topic => {
+    const priority = this.getTopicPriority(topic);
+    console.log(`🔍 Topic ${topic.id} - "${topic.topicName}" - Priority: ${priority}`);
+    
+    return {
+      topicId: topic.id,
+      priority: priority,
+      topicName: topic.topicName
+    };
+  });
+  
+  // Sort by priority ASCENDING (1, 2, 3, ...)
+  topicsWithPriority.sort((a, b) => a.priority - b.priority);
+  
+  this.modulePriorities.set(this.moduleId, topicsWithPriority);
+  
+  // Debug the sorted list
+  console.log('📊 SORTED Priority list:');
+  topicsWithPriority.forEach((topic, index) => {
+    console.log(`   ${index + 1}. Topic ${topic.topicId} - "${topic.topicName}" (Priority: ${topic.priority})`);
+  });
+  
+  if (topicsWithPriority.length > 0) {
+    const lastTopic = topicsWithPriority[topicsWithPriority.length - 1];
+    const firstTopic = topicsWithPriority[0];
+    console.log('📊 First topic (lowest priority?):', firstTopic.topicId, firstTopic.topicName, 'Priority:', firstTopic.priority);
+    console.log('📊 Last topic (highest priority?):', lastTopic.topicId, lastTopic.topicName, 'Priority:', lastTopic.priority);
+  }
+}
+/**
+ * Check if current topic is the last topic based on priority
+ */
+isLastTopicByPriority(): boolean {
+  if (!this.currentTopic || !this.moduleId) return false;
+  
+  const moduleTopics = this.modulePriorities.get(this.moduleId);
+  
+  if (!moduleTopics || moduleTopics.length === 0) {
+    console.log('⚠️ No priorities stored for module', this.moduleId);
+    return false;
+  }
+  
+  // Get the topic with highest priority number (last in sorted array)
+  const lastTopic = moduleTopics[moduleTopics.length - 1];
+  const isLast = this.currentTopic.id === lastTopic.topicId;
+  
+  console.log('🔍 Priority check:', {
+    moduleId: this.moduleId,
+    currentTopicId: this.currentTopic.id,
+    lastTopicId: lastTopic.topicId,
+    isLast: isLast,
+    totalTopics: moduleTopics.length
+  });
+  
+  return isLast;
+}
+
+
+private debugPriorityValues(): void {
+  const allTopics = this.allModuleTopics.get(this.moduleId) || [];
+  
+  console.log('🔍 DEBUG PRIORITY VALUES for Module', this.moduleId);
+  allTopics.forEach(topic => {
+    console.log('   Topic:', {
+      id: topic.id,
+      name: topic.topicName,
+      priority: topic.priority, // This is what we need to check
+      rawTopic: topic // Show the whole object
+    });
+  });
+}
+// /**
+//  * Alternative: Check if current topic has the highest priority
+//  */
+// isCurrentTopicHighestPriority(): boolean {
+//   if (!this.currentTopic || !this.moduleId) return false;
+  
+//   const moduleTopics = this.modulePriorities.get(this.moduleId);
+//   if (!moduleTopics || moduleTopics.length === 0) return false;
+  
+//   // Find current topic priority
+//   const currentTopicData = moduleTopics.find(t => t.topicId === this.currentTopic!.id);
+//   if (!currentTopicData) return false;
+  
+//   // Find max priority in module
+//   const maxPriority = Math.max(...moduleTopics.map(t => t.priority));
+  
+//   return currentTopicData.priority === maxPriority;
+// }
+
+/**
+ * Main method to determine if submit button should be shown
+ */
+// shouldShowSubmitButton(): boolean {
+//   // Only show submit on the last topic of the module
+//   const isLast = this.isLastTopicByPriority();
+  
+//   console.log('🎯 Submit button check:', {
+//     moduleId: this.moduleId,
+//     currentTopicId: this.currentTopic?.id,
+//     currentTopicName: this.currentTopic?.topicName,
+//     isLast: isLast,
+//     shouldShow: isLast
+//   });
+  
+//   return isLast;
+// }
+
+/**
+ * Debug method to see topic information
+ */
+/**
+ * Debug method to see topic information
+ */
+debugTopicInfo(): void {
+  console.log('🔍 DEBUG Topic Info:', {
+    routeParams: {
+      moduleId: this.moduleId,
+      topicId: this.topicId
+    },
+    currentModule: this.currentModule ? {
+      id: this.currentModule.id,
+      name: this.currentModule.moduleName,
+      topicsInResponse: this.currentModule.topicDTOs?.length || 0
+    } : null,
+    currentTopic: this.currentTopic ? {
+      id: this.currentTopic.id,
+      name: this.currentTopic.topicName,
+      priority: this.getTopicPriority(this.currentTopic)
+    } : null,
+    allTopicsCached: this.allModuleTopics.get(this.moduleId)?.length || 0,
+    storedPriorities: this.modulePriorities.get(this.moduleId)?.length || 0,
+    isLastByPriority: this.isLastTopicByPriority()
+  });
+}
+
+
+
+/**
+ * SIMPLE DEBUG - Shows what's happening with priorities
+ */
+simpleDebug(): void {
+  console.log('🔍 ========== SIMPLE DEBUG ==========');
+  
+  // Basic info
+  console.log('📌 Module:', this.moduleId, '-', this.currentModule?.moduleName);
+  console.log('📌 Topic:', this.currentTopic?.id, '-', this.currentTopic?.topicName);
+  
+  // What topics we know about
+  const discoveredTopics = this.allModuleTopics.get(this.moduleId) || [];
+  console.log('📚 Topics discovered so far:', discoveredTopics.length);
+  
+  if (discoveredTopics.length > 0) {
+    discoveredTopics.forEach(topic => {
+      console.log('   -', topic.id, topic.topicName, 'Priority:', this.getTopicPriority(topic));
+    });
+  }
+  
+  // Priority list
+  const priorities = this.modulePriorities.get(this.moduleId) || [];
+  console.log('🎯 Priority list:', priorities.length, 'topics');
+  
+  if (priorities.length > 0) {
+    const lastTopic = priorities[priorities.length - 1];
+    console.log('   Last topic by priority:', lastTopic.topicId, lastTopic.topicName);
+    console.log('   Current topic is last?', this.currentTopic?.id === lastTopic.topicId);
+  }
+  
+  // Should show submit?
+  console.log('✅ Should show submit button?', this.shouldShowSubmitButton());
+  console.log('🔍 ========== END DEBUG ==========\n');
+}
+
+/**
+ * Main method to determine if submit button should be shown
+ */
+private submitButtonCache: {[key: string]: boolean} = {}; // Add this property
+
+shouldShowSubmitButton(): boolean {
+  if (!this.currentTopic || !this.moduleId) return false;
+  
+  // Create cache key
+  const cacheKey = `${this.moduleId}_${this.currentTopic.id}`;
+  
+  // Return cached result if available
+  if (this.submitButtonCache[cacheKey] !== undefined) {
+    return this.submitButtonCache[cacheKey];
+  }
+  
+  const priorities = this.modulePriorities.get(this.moduleId) || [];
+  if (priorities.length === 0) {
+    this.submitButtonCache[cacheKey] = false;
+    return false;
+  }
+  
+  // Find the topic with the HIGHEST priority number
+  const highestPriorityTopic = priorities.reduce((max, topic) => 
+    topic.priority > max.priority ? topic : max
+  );
+  
+  const currentTopicPriority = priorities.find(t => t.topicId === this.currentTopic!.id);
+  const isHighestPriority = this.currentTopic.id === highestPriorityTopic.topicId;
+  
+  // Log only once per topic change
+  console.log('🎯 SUBMIT BUTTON CHECK (CACHED):', {
+    currentTopicId: this.currentTopic.id,
+    currentTopicName: this.currentTopic.topicName,
+    currentPriority: currentTopicPriority?.priority || 'Not found',
+    highestPriorityTopicId: highestPriorityTopic.topicId,
+    highestPriorityTopicName: highestPriorityTopic.topicName,
+    highestPriorityValue: highestPriorityTopic.priority,
+    shouldShowSubmit: isHighestPriority
+  });
+  
+  // Cache the result
+  this.submitButtonCache[cacheKey] = isHighestPriority;
+  
+  return isHighestPriority;
+}
+
+// Clear cache when module/topic changes
+ngOnInit(): void {
+  this.route.queryParams.subscribe((params) => {
+    // Clear cache
+    this.submitButtonCache = {};
+    
+    this.selectedCompanies = [];
+    this.clearComponentData();
+
+    this.moduleId = params["module"] ? parseInt(params["module"]) : 0;
+    this.topicId = params["topic"] ? parseInt(params["topic"]) : 1;
+    
+    console.log('Loading module:', this.moduleId, 'topic:', this.topicId);
+    this.loadPerformanceData();
+    this.loadCompanies();
+  });
+}
+
+/**
+ * Workaround: Build topic list incrementally as user navigates
+ */
+private buildTopicListIncrementally(): void {
+  if (!this.currentTopic || !this.moduleId) return;
+  
+  // Get or create topic list for this module
+  if (!this.allModuleTopics.has(this.moduleId)) {
+    this.allModuleTopics.set(this.moduleId, []);
+  }
+  
+  const topicList = this.allModuleTopics.get(this.moduleId)!;
+  
+  // Add current topic if not already in list
+  const existingTopic = topicList.find(t => t.id === this.currentTopic!.id);
+  if (!existingTopic && this.currentTopic) {
+    // Create a deep copy of the topic
+    const topicCopy = {
+      ...this.currentTopic,
+      questions: this.currentTopic.questions ? [...this.currentTopic.questions] : [],
+      questionDTOs: this.currentTopic.questionDTOs ? [...this.currentTopic.questionDTOs] : [],
+      subTopics: this.currentTopic.subTopics ? [...this.currentTopic.subTopics] : []
+    };
+    
+    topicList.push(topicCopy);
+    console.log('➕ Added topic to incremental list:', {
+      moduleId: this.moduleId,
+      topicId: this.currentTopic.id,
+      topicName: this.currentTopic.topicName,
+      totalTopicsNow: topicList.length
+    });
+    
+    // Update priorities
+    this.storeModulePriorities();
+  }
+}
 
   /**
    * Get module name
